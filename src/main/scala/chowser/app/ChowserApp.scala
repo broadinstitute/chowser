@@ -3,7 +3,9 @@ package chowser.app
 object ChowserApp {
 
   def main(args: Array[String]): Unit = {
-    println("Yo!")
+    val conf = new ChowserConf(args)
+    println(conf.summary)
+    println("Done!")
   }
 
 }
