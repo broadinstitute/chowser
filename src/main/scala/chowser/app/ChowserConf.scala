@@ -24,6 +24,14 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
     addSubcommand(filter)
   }
   addSubcommand(tsv)
+  val variants = new Subcommand("genomics") {
+    banner("Usage: chowser variants regions [OPTIONS]\nConsume file containing variants")
+    val regions = new Subcommand("regions") {
+
+    }
+    addSubcommand(regions)
+  }
+  addSubcommand(variants)
   requireSubcommand()
   verify()
 
