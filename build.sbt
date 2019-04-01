@@ -18,6 +18,7 @@ lazy val root = (project in file("."))
     name := "chowser",
     version := chowserV,
     scalaVersion := scalaV,
-    libraryDependencies ++= (mainDeps ++ testDeps)
+    libraryDependencies ++= (mainDeps ++ testDeps),
+    scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked")
   )
 
