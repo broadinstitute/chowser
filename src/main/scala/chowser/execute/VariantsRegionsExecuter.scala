@@ -6,6 +6,9 @@ import chowser.util.regions.{CanonicalRegions, Region}
 
 object VariantsRegionsExecuter {
 
+  val startColName = "start"
+  val endColName = "end"
+
   def execute(command: VariantsRegionsCommand): Result = {
     import command.{inFile, outFile, chromColName, posColName, radius }
     val rowIterator = TsvReader.forSimpleHeaderLine(inFile)
@@ -24,8 +27,6 @@ object VariantsRegionsExecuter {
     if(outFile.nonEmpty) {
       outFile.clear()
     }
-    val startColName = "start"
-    val endColName = "end"
     val writer = TsvWriter(outFile, Seq(chromColName, startColName, endColName))
     for(chromosome <- chromosomes) {
       val regions = regionsByChromosome(chromosome)
