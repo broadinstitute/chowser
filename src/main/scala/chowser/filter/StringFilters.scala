@@ -1,28 +1,19 @@
 package chowser.filter
 
-import java.util.regex.Pattern
+import chowser.util.NumberParser
 
 import scala.util.control.NonFatal
 
 object StringFilters {
 
-  val doublePattern: Pattern = Pattern.compile("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?")
+  def parsesAsDoubleFilter: Filter[String] = (string: String) => NumberParser.DoubleParser.isValid(string)
 
-  def parsesAsDouble(string: String): Boolean = {
-    if (string == null) {
-      false
-    } else if (string.toLowerCase == "nan") {
-      true
-    } else {
-      doublePattern.matcher(string).matches()
-    }
-  }
-
-  def parsesAsDoubleFilter: Filter[String] = (string: String) => parsesAsDouble(string)
+  def parsesAsUnsignedIntegerFilter: Filter[String] =
+    (string: String) => NumberParser.UnsignedIntParser.isValid(string)
 
   case class StringAsDoubleFilter(doubleFilter: Filter[Double]) extends Filter[String] {
     override def apply(string: String): Boolean = {
-      if (parsesAsDouble(string)) {
+      if (NumberParser.DoubleParser.isValid(string)) {
         try {
           doubleFilter(string.toDouble)
         } catch {
