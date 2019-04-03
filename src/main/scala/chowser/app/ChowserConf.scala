@@ -6,6 +6,7 @@ import better.files._
 import chowser.cmd.{ChowserCommand, TsvFilterCommand, VariantsRegionsCommand}
 import chowser.filter.DoubleFilters
 import org.rogach.scallop.{ScallopConf, Subcommand}
+import scala.language.reflectiveCalls
 
 class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   version(ChowserAppInfo.fullName)

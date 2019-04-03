@@ -1,6 +1,6 @@
 import sbt.project
 
-val chowserV = "0.0.1"
+val chowserV = "1.0.0"
 val scalaV = "2.12.8"
 val scalaTestV = "3.0.5"
 
@@ -19,6 +19,12 @@ lazy val root = (project in file("."))
     version := chowserV,
     scalaVersion := scalaV,
     libraryDependencies ++= (mainDeps ++ testDeps),
-    scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked")
-  )
+    scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked"),
+    mainClass := Some("chowser.app.ChowserApp"),
+    maintainer := "Oliver A Ruebenacker <oliverr@broadinstitute.org>",
+    packageSummary := "Command-line data munging app",
+    packageDescription := "Command-line app to process genomic and other tab-separated data.",
+    debianPackageDependencies := Seq("java8-runtime-headless"),
+    debianNativeBuildOptions in Debian := Seq("-Zgzip", "-z3") // gzip compression at level 3
+  ).enablePlugins(JavaAppPackaging, DebianPlugin)
 
