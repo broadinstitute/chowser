@@ -3,9 +3,10 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, TsvFilterCommand, VariantsRegionsCommand}
+import chowser.cmd.{ChowserCommand, TsvFilterCommand, VariantsForRegionCommand, VariantsRegionsCommand}
 import chowser.filter.DoubleFilters
 import org.rogach.scallop.{ScallopConf, Subcommand}
+
 import scala.language.reflectiveCalls
 
 class ChowserConf(args: Array[String]) extends ScallopConf(args) {
@@ -36,12 +37,22 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   addSubcommand(tsv)
   val variants = new Subcommand("variants") {
     banner("Usage: chowser variants regions [OPTIONS]\nConsume file containing variants")
-    val regions = new Subcommand("regions") with OneInFile with OneOutFile {
-      val chrom = opt[String]("chrom", required = true, descr = "Name of column containing chromosome")
-      val pos = opt[String]("pos", required = true, descr = "Name of column containing position")
+    trait ChromPosCols {
+      _: ScallopConf =>
+      val chromCol = opt[String]("chrom-col", required = true, descr = "Name of column containing chromosome")
+      val posCol = opt[String]("pos-col", required = true, descr = "Name of column containing position")
+    }
+    val regions = new Subcommand("regions") with OneInFile with OneOutFile with ChromPosCols {
       val radius = opt[Int]("radius", required = true, descr = "Minimum distance to be included on each side.")
     }
     addSubcommand(regions)
+    val forRegion = new Subcommand("for-region")
+      with OneInFile with OneOutFile with ChromPosCols {
+      val chrom = opt[String]("chrom", required = true, descr = "Chromosome on which region lies.")
+      val start = opt[Int](name = "start", required = true, descr = "Start position of region.")
+      val end = opt[Int](name = "end", required = true, descr = "End position of region.")
+    }
+    addSubcommand(forRegion)
   }
   addSubcommand(variants)
   requireSubcommand()
@@ -67,10 +78,20 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val subcommand = variants.regions
         val inFile = subcommand.in().toScala
         val outFile = subcommand.out().toScala
-        val chromColName = subcommand.chrom()
-        val posColName = subcommand.pos()
+        val chromColName = subcommand.chromCol()
+        val posColName = subcommand.posCol()
         val radius  = subcommand.radius()
         Right(VariantsRegionsCommand(inFile, outFile, chromColName, posColName, radius))
+      case List(this.variants, this.variants.forRegion) =>
+        val subcommand = variants.forRegion
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        val chromColName = subcommand.chromCol()
+        val posColName = subcommand.posCol()
+        val chromosome = subcommand.chrom()
+        val start = subcommand.start()
+        val end = subcommand.end()
+        Right(VariantsForRegionCommand(inFile, outFile, chromColName, posColName, chromosome, start, end))
       case _ => Left("Invalid combination of commands.")
     }
   }
