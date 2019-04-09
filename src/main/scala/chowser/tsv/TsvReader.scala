@@ -29,6 +29,15 @@ object TsvReader {
     def unsignedInt(colName: String): Int = NumberParser.UnsignedIntParser.parse(valueMap(colName))
   }
 
+  trait LineCleaner {
+    def clean(line: String): String
+  }
+
+  object LineCleaner {
+    val noop: LineCleaner = (line: String) => line
+    val removeLeadingSharps: LineCleaner = (line: String) => line.dropWhile(_ == '#')
+  }
+
   trait LineSplitter {
     def split(line: String): Seq[String]
   }
@@ -42,13 +51,22 @@ object TsvReader {
     val byTab: RegexSplitter = RegexSplitter("\t")
   }
 
-  def forSimpleHeaderLine(file: File, splitter: LineSplitter = LineSplitter.byTab): TsvReader =
-    forSimpleHeaderLine(file.lineIterator, splitter)
+  class LineParser(val headerCleaner: LineCleaner, val lineSplitter: LineSplitter) {
+    def parseHeaderLine(line: String): Seq[String] = lineSplitter.split(headerCleaner.clean(line))
+    def parseLine(line: String): Seq[String] = lineSplitter.split(line)
+  }
 
-  def forSimpleHeaderLine(lineIterator: Iterator[String], splitter: LineSplitter): TsvReader = {
+  object LineParser {
+    val default: LineParser = new LineParser(LineCleaner.removeLeadingSharps, LineSplitter.byTab)
+  }
+
+  def forSimpleHeaderLine(file: File, parser: LineParser = LineParser.default): TsvReader =
+    forSimpleHeaderLine(file.lineIterator, parser)
+
+  def forSimpleHeaderLine(lineIterator: Iterator[String], parser: LineParser): TsvReader = {
     val headerLine = lineIterator.next()
-    val cols = splitter.split(headerLine)
-    TsvReader(lineIterator, splitter, cols, Seq(headerLine))
+    val cols = parser.parseHeaderLine(headerLine)
+    TsvReader(lineIterator, parser.lineSplitter, cols, Seq(headerLine))
   }
 
 }
