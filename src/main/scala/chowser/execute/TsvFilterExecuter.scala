@@ -4,20 +4,15 @@ import chowser.cmd.TsvFilterCommand
 import chowser.filter.{RowFilters, StringFilters}
 import chowser.tsv.TsvReader
 
-object TsvFilterExecuter {
+object TsvFilterExecuter extends ChowserExecuter[TsvFilterCommand] {
 
-  def execute(command: TsvFilterCommand): ChowserExecuter.Result = {
+  def execute(command: TsvFilterCommand): Result = {
     import command.{inFile, outFile, colName, filter}
-    val rowIterator = TsvReader.forSimpleHeaderLine(inFile)
     val rowFilter = RowFilters.ForCol(colName, StringFilters.parsesAsDoubleAndFilter(filter))
-    if(outFile.nonEmpty) {
-      outFile.clear()
-    }
-    rowIterator.headers.foreach(outFile.appendLine(_))
-    rowIterator.filter(rowFilter).map(_.line).foreach(outFile.appendLine(_))
+    ExecutionUtils.filterRows(inFile, outFile, TsvReader.forSimpleHeaderLine(_), rowFilter)
     Result(command, success = true)
   }
 
-  case class Result(command: TsvFilterCommand, success: Boolean) extends ChowserExecuter.Result
+  case class Result(command: TsvFilterCommand, success: Boolean) extends ChowserExecuter.Result[TsvFilterCommand]
 
 }

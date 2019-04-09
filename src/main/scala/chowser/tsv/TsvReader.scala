@@ -5,7 +5,7 @@ import chowser.tsv.TsvReader.{LineSplitter, Row}
 import chowser.util.NumberParser
 
 class TsvReader(val lineIterator: Iterator[String], val splitter: LineSplitter, val cols: Seq[String],
-                val headers: Seq[String])
+                val headerLines: Seq[String])
   extends Iterator[Row] {
   override def hasNext: Boolean = lineIterator.hasNext
 

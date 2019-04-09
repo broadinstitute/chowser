@@ -28,4 +28,21 @@ object StringFilters {
 
   def parsesAsDoubleAndFilter(doubleFilter: Filter[Double]): Filter[String] = StringAsDoubleFilter(doubleFilter)
 
+  case class StringAsUnsignedIntFilter(intFilter: Filter[Int]) extends Filter[String] {
+    override def apply(string: String): Boolean = {
+      if(NumberParser.UnsignedIntParser.isValid(string)) {
+        try {
+          val theInt = string.toInt
+          theInt >= 0 && intFilter(string.toInt)
+        } catch {
+          case NonFatal(_) => false
+        }
+      } else {
+        false
+      }
+    }
+  }
+
+  def parseAsUnsignedIntegerAndFilter(intFilter: Filter[Int]): Filter[String] = StringAsUnsignedIntFilter(intFilter)
+
 }

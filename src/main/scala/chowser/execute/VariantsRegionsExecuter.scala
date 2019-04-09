@@ -4,7 +4,7 @@ import chowser.cmd.VariantsRegionsCommand
 import chowser.tsv.{TsvReader, TsvWriter}
 import chowser.util.regions.{CanonicalRegions, Region}
 
-object VariantsRegionsExecuter {
+object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
 
   val startColName = "start"
   val endColName = "end"
@@ -37,6 +37,7 @@ object VariantsRegionsExecuter {
     Result(command, success = true)
   }
 
-  case class Result(command: VariantsRegionsCommand, success: Boolean) extends ChowserExecuter.Result
+  case class Result(command: VariantsRegionsCommand, success: Boolean)
+    extends ChowserExecuter.Result[VariantsRegionsCommand]
 
 }
