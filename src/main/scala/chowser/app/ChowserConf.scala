@@ -3,7 +3,7 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, TsvFilterCommand, VariantsForRegionCommand, VariantsRegionsCommand}
+import chowser.cmd.{ChowserCommand, TsvFilterCommand, TsvSortCommand, VariantsForRegionCommand, VariantsRegionsCommand}
 import chowser.filter.DoubleFilters
 import org.rogach.scallop.{ScallopConf, Subcommand}
 
@@ -33,6 +33,11 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       requireAtLeastOne(lt, gt)
     }
     addSubcommand(filter)
+    val sort = new Subcommand("sort") with OneInFile with OneOutFile {
+      banner("usage: chowser tsv sort [OPTIONS]\nSort records of tab-separated file")
+      val col = opt[String]("col", required = true, descr = "Name of column to sort by")
+    }
+    addSubcommand(sort)
   }
   addSubcommand(tsv)
   val variants = new Subcommand("variants") {
@@ -74,6 +79,12 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
           case (None, None) => DoubleFilters.all
         }
         Right(TsvFilterCommand(inFile, outFile, colName, numberFilter))
+      case List(this.tsv, this.tsv.sort) =>
+        val subcommand = tsv.sort
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        val colName = subcommand.col()
+        Right(TsvSortCommand(inFile, outFile, colName))
       case List(this.variants, this.variants.regions) =>
         val subcommand = variants.regions
         val inFile = subcommand.in().toScala
