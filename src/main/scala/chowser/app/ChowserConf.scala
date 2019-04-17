@@ -3,7 +3,7 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, TsvFilterCommand, TsvSortCommand, VariantsForRegionCommand, VariantsRegionsCommand}
+import chowser.cmd.{ChowserCommand, CompareVariantsCommand, TsvFilterCommand, TsvSortCommand, VariantsForRegionCommand, VariantsRegionsCommand}
 import chowser.filter.DoubleFilters
 import org.rogach.scallop.{ScallopConf, Subcommand}
 
@@ -38,6 +38,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val col = opt[String]("col", required = true, descr = "Name of column to sort by")
     }
     addSubcommand(sort)
+    requireSubcommand()
   }
   addSubcommand(tsv)
   val variants = new Subcommand("variants") {
@@ -53,13 +54,31 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
     addSubcommand(regions)
     val forRegion = new Subcommand("for-region")
       with OneInFile with OneOutFile with ChromPosCols {
-      val chrom = opt[String]("chrom", required = true, descr = "Chromosome on which region lies.")
+      val chrom = opt[String](name = "chrom", required = true, descr = "Chromosome on which region lies.")
       val start = opt[Int](name = "start", required = true, descr = "Start position of region.")
       val end = opt[Int](name = "end", required = true, descr = "End position of region.")
     }
     addSubcommand(forRegion)
+    requireSubcommand()
   }
   addSubcommand(variants)
+  val compare = new Subcommand("compare") {
+    banner("Usage: chowser compare variants [OPTIONS]\nCompare a VCF and a TSV file, both sorted, containing variants")
+    val variants = new Subcommand("variants") {
+      val vcf = opt[JFile](name = "vcf", required = true, descr = "Input VCF file")
+      val tsv = opt[JFile](name = "tsv", required = true, descr = "Input TSV file")
+      val idCol = opt[String](name = "id-col", required = true, descr = "Variant id column name in TSV file")
+      val chromCol = opt[String](name = "chrom-col", required = true, descr = "Chromosome column name in TSV file")
+      val posCol = opt[String](name = "pos-col", required = true, descr = "Position column name in TSV file")
+      val inBoth = opt[JFile](name = "in-both", descr = "Output file with variants both in VCF and TSV file.")
+      val vcfOnly = opt[JFile](name = "vcf-only", descr = "Output file with variants only in VCF file.")
+      val tsvOnly = opt[JFile](name = "tsv-only", descr = "Output file with variants only in TSV file.")
+      requireAtLeastOne(inBoth, vcfOnly, tsvOnly)
+    }
+    addSubcommand(variants)
+    requireSubcommand()
+  }
+  addSubcommand(compare)
   requireSubcommand()
   verify()
 
@@ -103,6 +122,19 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val start = subcommand.start()
         val end = subcommand.end()
         Right(VariantsForRegionCommand(inFile, outFile, chromColName, posColName, chromosome, start, end))
+      case List(this.compare, this.compare.variants) =>
+        val subcommand = compare.variants
+        val vcfFile = subcommand.vcf().toScala
+        val tsvFile = subcommand.tsv().toScala
+        val idColName = subcommand.idCol()
+        val chromColName = subcommand.chromCol()
+        val posColName = subcommand.posCol()
+        val inBothOpt = subcommand.inBoth.toOption.map(_.toScala)
+        val vcfOnly = subcommand.vcfOnly.toOption.map(_.toScala)
+        val tsvOnly = subcommand.tsvOnly.toOption.map(_.toScala)
+        Right(
+          CompareVariantsCommand(vcfFile, tsvFile, idColName, chromColName, posColName, inBothOpt, vcfOnly, tsvOnly)
+        )
       case _ => Left("Invalid combination of commands.")
     }
   }
