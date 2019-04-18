@@ -1,6 +1,7 @@
 package chowser.util.genomics
 
 import chowser.util.NumberParser
+import htsjdk.variant.variantcontext.VariantContext
 
 case class VariantIdLocation(id: String, location: Location) {
 
@@ -28,6 +29,25 @@ object VariantIdLocation {
               }
           }
         }
+    }
+  }
+
+  def fromVariantContext(context: VariantContext): Either[String, VariantIdLocation] = {
+    if(context.emptyID()) {
+      Left("No id given")
+    } else {
+      val id = context.getID()
+      if(id.isEmpty || id == ".") {
+        Left("No id given")
+      } else {
+        val chromString = ???
+        Chromosome.parse(chromString) match {
+          case Left(message) => Left(message)
+          case Right(chromosome) =>
+            val pos = context.getStart
+            Right(VariantIdLocation(id, Location(chromosome, pos)))
+        }
+      }
     }
   }
 

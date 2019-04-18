@@ -3,10 +3,14 @@ import sbt.project
 val chowserV = "1.2.0"
 val scalaV = "2.12.8"
 val scalaTestV = "3.0.5"
+val betterFilesV = "3.7.1"
+val scallopV = "3.2.0"
+val htsjdkV = "2.19.0"
 
 lazy val mainDeps = Seq(
-  "com.github.pathikrit" %% "better-files" % "3.7.1",
-  "org.rogach" %% "scallop" % "3.2.0"
+  "com.github.pathikrit" %% "better-files" % betterFilesV,
+  "org.rogach" %% "scallop" % scallopV,
+  "com.github.samtools" % "htsjdk" % htsjdkV
 )
 
 lazy val testDeps = Set(
