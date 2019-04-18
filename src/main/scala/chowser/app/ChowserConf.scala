@@ -38,7 +38,6 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val col = opt[String]("col", required = true, descr = "Name of column to sort by")
     }
     addSubcommand(sort)
-    requireSubcommand()
   }
   addSubcommand(tsv)
   val variants = new Subcommand("variants") {
@@ -59,7 +58,6 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val end = opt[Int](name = "end", required = true, descr = "End position of region.")
     }
     addSubcommand(forRegion)
-    requireSubcommand()
   }
   addSubcommand(variants)
   val compare = new Subcommand("compare") {
@@ -76,7 +74,6 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       requireAtLeastOne(inBoth, vcfOnly, tsvOnly)
     }
     addSubcommand(variants)
-    requireSubcommand()
   }
   addSubcommand(compare)
   requireSubcommand()
