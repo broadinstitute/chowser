@@ -1,5 +1,7 @@
 package chowser.util.genomics
 
+import better.files.File
+import chowser.tsv.{TsvReader, TsvWriter}
 import chowser.util.NumberParser
 import htsjdk.variant.variantcontext.VariantContext
 
@@ -33,11 +35,11 @@ object VariantIdLocation {
   }
 
   def fromVariantContext(context: VariantContext): Either[String, VariantIdLocation] = {
-    if(context.emptyID()) {
+    if (context.emptyID()) {
       Left("No id given")
     } else {
       val id = context.getID()
-      if(id.isEmpty || id == ".") {
+      if (id.isEmpty || id == ".") {
         Left("No id given")
       } else {
         val chromString = ???
@@ -48,6 +50,34 @@ object VariantIdLocation {
             Right(VariantIdLocation(id, Location(chromosome, pos)))
         }
       }
+    }
+  }
+
+  class VariantIdLocationTsvReader(val idKey: String, val chromosomeKey: String,
+                                   val positionKey: String)(val file: File) extends Iterator[VariantIdLocation] {
+    val tsvReader = TsvReader.forSimpleHeaderLine(file)
+
+    val delegate = tsvReader.map(_.valueMap).map(fromMap(idKey, chromosomeKey, positionKey)(_)).collect {
+      case Right(variantIdLocation) => variantIdLocation
+    }
+
+    override def hasNext: Boolean = delegate.hasNext
+
+    override def next(): VariantIdLocation = delegate.next()
+  }
+
+  class VariantIdLocationTsvWriter(val idKey: String, val chromosomeKey: String,
+                                   val positionKey: String)(val file: File) {
+    val tsvWriter = new TsvWriter(file, Seq(idKey, chromosomeKey, positionKey))
+
+    def add(variantIdLocation: VariantIdLocation): Unit = {
+      tsvWriter.addRow(
+        Map(
+          idKey -> variantIdLocation.id,
+          chromosomeKey -> variantIdLocation.location.chromosome.inEnsembleNotation,
+          positionKey -> variantIdLocation.location.position.toString
+        )
+      )
     }
   }
 
