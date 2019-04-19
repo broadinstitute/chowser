@@ -42,7 +42,7 @@ object VariantIdLocation {
       if (id.isEmpty || id == ".") {
         Left("No id given")
       } else {
-        val chromString = ???
+        val chromString = context.getContig
         Chromosome.parse(chromString) match {
           case Left(message) => Left(message)
           case Right(chromosome) =>
