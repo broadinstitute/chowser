@@ -16,6 +16,7 @@ case class VariantComparerNew(idKey: String, chromosomeKey: String, positionKey:
     val inBothSink = Sink.forFileOpt(inBothFileOpt)
     val inOneOnlySink = Sink.forFileOpt(inOneOnlyFileOpt)
     val inTwoOnlySink = Sink.forFileOpt(inTwoOnlyFileOpt)
+    val buffer = VariantBuffer.apply(iter1, iter2, inBothSink, inOneOnlySink, inTwoOnlySink)
     if (!iter1.hasNext) {
       iter2.foreach(inTwoOnlySink.write)
     } else if (!iter2.hasNext) {
@@ -82,6 +83,10 @@ case class VariantComparerNew(idKey: String, chromosomeKey: String, positionKey:
 
 
   object VariantBuffer {
+    def apply(iter1: Iterator[VariantIdLocation], iter2: Iterator[VariantIdLocation],
+              inBothSink: Sink, inOneOnlySink: Sink, inTwoOnlySink: Sink): VariantBufferFlushed =
+      apply(new Channels(iter1, iter2, inBothSink, inOneOnlySink, inTwoOnlySink))
+
     def apply(channels: Channels): VariantBufferFlushed = VariantBufferFlushed(channels)
   }
 
