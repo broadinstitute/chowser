@@ -2,21 +2,34 @@ package chowser.util.genomics
 
 import chowser.util.NumberParser
 
-sealed trait Chromosome {
+sealed trait Chromosome extends Ordered[Chromosome] {
   def inEnsembleNotation: String
 
   def inUcscNotation: String = "chr" + inEnsembleNotation
-
 }
 
 object Chromosome {
 
   case class Numbered(n: Int) extends Chromosome {
     override def inEnsembleNotation: String = n.toString
+
+    override def compare(that: Chromosome): Int = {
+      that match {
+        case Numbered(nThat) => n - nThat
+        case _: Lettered => -1
+      }
+    }
   }
 
   case class Lettered(letter: Char) extends Chromosome {
     override def inEnsembleNotation: String = letter.toString
+
+    override def compare(that: Chromosome): Int = {
+      that match {
+        case _: Numbered => 1
+        case Lettered(letterThat) => letter - letterThat
+      }
+    }
   }
 
   def parse(string: String): Either[String, Chromosome] = {
@@ -37,18 +50,6 @@ object Chromosome {
             invalidChromosomeLeft(trimmed)
           }
         }
-    }
-
-  }
-
-  object Ordering extends scala.math.Ordering[Chromosome] {
-    override def compare(chr1: Chromosome, chr2: Chromosome): Int = {
-      (chr1, chr2) match {
-        case (Numbered(n1), Numbered(n2)) => n1 - n2
-        case (Numbered(_), Lettered(_)) => -1
-        case (Lettered(_), Numbered(_)) => 1
-        case (Lettered(char1), Lettered(char2)) => char1 - char2
-      }
     }
   }
 }
