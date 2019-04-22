@@ -17,6 +17,7 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
     val inTwoOnlySink = Sink.forFileOpt(inTwoOnlyFileOpt)
     var buffer: VariantBuffer = VariantBuffer.apply(iter1, iter2, inBothSink, inOneOnlySink, inTwoOnlySink)
     while (!buffer.isTerminal) {
+      println(s"Buffer: $buffer")
       buffer = buffer.next()
     }
   }
@@ -97,16 +98,16 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
 
     override def isTerminal: Boolean = false
 
-    def readVariantsAtLocation(location: Location, variantAheadOpt: Option[VariantIdLocation],
+    def readVariantsAtLocation(location: Location, variantAhead: VariantIdLocation,
                                iter: Iterator[VariantIdLocation]):
     (Set[VariantIdLocation], Option[VariantIdLocation]) = {
       var variantsHere: Set[VariantIdLocation] = Set.empty
-      var variantAheadNewOpt: Option[VariantIdLocation] = variantAheadOpt
+      var variantAheadNewOpt: Option[VariantIdLocation] = Some(variantAhead)
       var keepGoing = variantAheadNewOpt.nonEmpty
       while (keepGoing) {
-        val variantAhead = variantAheadNewOpt.get
-        if (variantAhead.location == location) {
-          variantsHere += variantAhead
+        val variantAheadNew = variantAheadNewOpt.get
+        if (variantAheadNew.location == location) {
+          variantsHere += variantAheadNew
           variantAheadNewOpt = channels.nextOpt(iter)
           keepGoing = variantAheadNewOpt.nonEmpty
         } else {
@@ -118,7 +119,7 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
 
     def advance: VariantBuffer = {
       val variantAheadNewOpt1 = variantAheadOpt1.orElse(channels.nextOpt1)
-      val variantAheadNewOpt2 = variantAheadOpt1.orElse(channels.nextOpt2)
+      val variantAheadNewOpt2 = variantAheadOpt2.orElse(channels.nextOpt2)
       (variantAheadNewOpt1, variantAheadNewOpt2) match {
         case (None, None) => new VariantBufferAllDone(channels)
         case (None, Some(variantAhead2)) => new VariantBufferDoneWith1(variantAhead2, channels)
@@ -127,8 +128,8 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
           val location1 = variantAhead1.location
           val location2 = variantAhead2.location
           val location = Set(location1, location2).min
-          val (variantsHere1, variantAheadOpt1) = readVariantsAtLocation(location, channels.nextOpt1, channels.iter1)
-          val (variantsHere2, variantAheadOpt2) = readVariantsAtLocation(location, channels.nextOpt2, channels.iter2)
+          val (variantsHere1, variantAheadOpt1) = readVariantsAtLocation(location, variantAhead1, channels.iter1)
+          val (variantsHere2, variantAheadOpt2) = readVariantsAtLocation(location, variantAhead2, channels.iter2)
           new VariantBufferAtLocation(location, variantsHere1, variantsHere2, variantAheadOpt1,
             variantAheadOpt2, channels)
       }
@@ -139,6 +140,8 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
     override def variantsHere2: Set[VariantIdLocation] = Set.empty
 
     override def next(): VariantBuffer = advance
+
+    override def toString: String = s"VariantBufferFlushed($variantAheadOpt1, $variantAheadOpt2)"
   }
 
   object VariantBufferFlushed {
@@ -220,6 +223,9 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
     }
 
     override def next(): VariantBufferFlushed = flush()
+
+    override def toString: String =
+      s"VariantBufferAtLocation($location, $variantsHere1, $variantsHere2, $variantAheadOpt1, $variantAheadOpt2)"
   }
 
 }
