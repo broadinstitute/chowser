@@ -24,7 +24,7 @@ object CompareVariantsExecuter extends ChowserExecuter[CompareVariantsCommand] {
         case Right(variantIdLocation) => variantIdLocation
       }
     }
-    val comparer = new VariantComparerNew(idCol, chromCol, posCol)
+    val comparer = VariantComparer(idCol, chromCol, posCol)
     comparer.compare(vcf, tsv, vcfToIter, tsvToIter, inBothOpt, vcfOnlyOpt, tsvOnlyOpt)
     Result(command, success = true)
   }
