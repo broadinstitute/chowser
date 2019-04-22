@@ -83,18 +83,23 @@ case class VariantComparerNew(idKey: String, chromosomeKey: String, positionKey:
                              val channels: Channels)
     extends VariantBuffer {
 
-    def readVariantsAtLocation(location: Location, iter: Iterator[VariantIdLocation],
-                               variantAheadOpt: Option[VariantIdLocation]):
+    def readVariantsAtLocation(location: Location, variantAheadOpt: Option[VariantIdLocation],
+                               iter: Iterator[VariantIdLocation]):
     (Set[VariantIdLocation], Option[VariantIdLocation]) = {
-       if(variantAheadOpt.nonEmpty) {
-         var variantsHere = Set.empty
-         while(variantAhead.location == location) {
-           variantsHere += variantAhead
-           variantAhead
-         }
-       } else {
-
-       }
+      var variantsHere: Set[VariantIdLocation] = Set.empty
+      var variantAheadNewOpt: Option[VariantIdLocation] = variantAheadOpt
+      var keepGoing = variantAheadNewOpt.nonEmpty
+      while(keepGoing) {
+        val variantAhead = variantAheadNewOpt.get
+        if(variantAhead.location == location) {
+          variantsHere += variantAhead
+          variantAheadNewOpt = channels.nextOpt(iter)
+          keepGoing = variantAheadNewOpt.nonEmpty
+        } else {
+          keepGoing = false
+        }
+      }
+      (variantsHere, variantAheadNewOpt)
     }
 
     def advance: VariantBuffer = {
@@ -103,24 +108,15 @@ case class VariantComparerNew(idKey: String, chromosomeKey: String, positionKey:
       (variantAheadNewOpt1, variantAheadNewOpt2) match {
         case (None, None) => new VariantBufferAllDone(channels)
         case (None, Some(variantAhead2)) => new VariantBufferDoneWith1(variantAhead2, channels)
-        case (Some(variantAhead1), None) => new VariantBufferDoneWith2(variantAhead1, channels: Channels)
+        case (Some(variantAhead1), None) => new VariantBufferDoneWith2(variantAhead1, channels)
         case (Some(variantAhead1), Some(variantAhead2)) =>
           val location1 = variantAhead1.location
           val location2 = variantAhead2.location
           val location = Set(location1, location2).min
-          val (variantsHere1, variantAheadOpt1) =
-            if (location1 == location) {
-              var variantsHere: Set[VariantIdLocation] = Set(variantAhead1)
-              var variantAheadOpt = channels.nextOpt1
-              while(variantAheadOpt.nonEmpty && variantAheadOpt.get.location == location) {
-                variantsHere += variantAheadOpt.get
-                variantAheadOpt = channels.nextOpt1
-              }
-              (variantsHere, variantAheadOpt)
-            } else {
-              (Set.empty, Some(variantAhead1))
-            }
-          ???
+          val (variantsHere1, variantAheadOpt1) = readVariantsAtLocation(location, channels.nextOpt1, channels.iter1)
+          val (variantsHere2, variantAheadOpt2) = readVariantsAtLocation(location, channels.nextOpt2, channels.iter2)
+          new VariantBufferAtLocation(location, variantsHere1, variantsHere2, variantAheadOpt1,
+            variantAheadOpt2, channels)
       }
     }
 
@@ -146,7 +142,7 @@ case class VariantComparerNew(idKey: String, chromosomeKey: String, positionKey:
 
     override def variantAheadOpt2: Option[VariantIdLocation] = Some(variantAhead2)
 
-    def flush2: Unit = ???
+    def flush2(): Unit = ???
   }
 
   class VariantBufferDoneWith2(val variantAhead1: VariantIdLocation, val channels: Channels)
@@ -155,7 +151,7 @@ case class VariantComparerNew(idKey: String, chromosomeKey: String, positionKey:
 
     override def variantAheadOpt2: Option[VariantIdLocation] = None
 
-    def flush1: Unit = ???
+    def flush1(): Unit = ???
   }
 
   class VariantBufferAllDone(val channels: Channels) extends VariantBufferDoneWithSome {
@@ -168,7 +164,8 @@ case class VariantComparerNew(idKey: String, chromosomeKey: String, positionKey:
                                 val variantsHere1: Set[VariantIdLocation],
                                 val variantsHere2: Set[VariantIdLocation],
                                 val variantAheadOpt1: Option[VariantIdLocation],
-                                val variantAheadOpt2: Option[VariantIdLocation])(val channels: Channels)
+                                val variantAheadOpt2: Option[VariantIdLocation],
+                                val channels: Channels)
     extends VariantBuffer {
   }
 
