@@ -1,4 +1,4 @@
-package chowser.util.genomics
+package chowser.genomics
 
 import chowser.util.NumberParser
 

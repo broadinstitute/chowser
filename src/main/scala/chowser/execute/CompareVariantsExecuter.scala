@@ -3,7 +3,7 @@ package chowser.execute
 import better.files.File
 import chowser.cmd.CompareVariantsCommand
 import chowser.tsv.TsvReader
-import chowser.util.genomics.VariantIdLocation
+import chowser.genomics.VariantIdOld
 import htsjdk.variant.vcf.VCFFileReader
 
 import scala.collection.JavaConverters._
@@ -11,15 +11,15 @@ import scala.collection.JavaConverters._
 object CompareVariantsExecuter extends ChowserExecuter[CompareVariantsCommand] {
   override def execute(command: CompareVariantsCommand): Result = {
     import command._
-    val vcfToIter: File => Iterator[VariantIdLocation] = { file =>
+    val vcfToIter: File => Iterator[VariantIdOld] = { file =>
       val reader = new VCFFileReader(file.path, false)
-      reader.iterator().asScala.map(VariantIdLocation.fromVariantContext).collect {
+      reader.iterator().asScala.map(VariantIdOld.fromVariantContext).collect {
         case Right(variantIdLocation) => variantIdLocation
       }
     }
-    val tsvToIter: File => Iterator[VariantIdLocation] = { file =>
+    val tsvToIter: File => Iterator[VariantIdOld] = { file =>
       TsvReader.forSimpleHeaderLine(file).map { row =>
-        VariantIdLocation.fromMap(idCol, chromCol, posCol)(row.valueMap)
+        VariantIdOld.fromMap(idCol, chromCol, posCol)(row.valueMap)
       }.collect {
         case Right(variantIdLocation) => variantIdLocation
       }

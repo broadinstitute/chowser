@@ -1,4 +1,4 @@
-package chowser.util.genomics
+package chowser.genomics
 
 case class Location(chromosome: Chromosome, position: Int) extends Ordered[Location] {
   override def compare(that: Location): Int = {
