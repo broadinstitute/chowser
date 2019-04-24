@@ -1,13 +1,13 @@
 package chowser.execute
 
 import better.files.File
-import chowser.genomics.VariantIdNew.VariantIdTsvWriter
-import chowser.genomics.{Location, VariantIdOld}
+import chowser.genomics.VariantId.VariantIdTsvWriter
+import chowser.genomics.{Location, VariantId}
 
 case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: String) {
 
   def compare(file1: File, file2: File,
-              fileToIter1: File => Iterator[VariantIdOld], fileToIter2: File => Iterator[VariantIdOld],
+              fileToIter1: File => Iterator[VariantId], fileToIter2: File => Iterator[VariantId],
               inBothFileOpt: Option[File], inOneOnlyFileOpt: Option[File], inTwoOnlyFileOpt: Option[File]
              ): Unit = {
     val iter1 = fileToIter1(file1)
@@ -17,16 +17,15 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
     val inTwoOnlySink = Sink.forFileOpt(inTwoOnlyFileOpt)
     var buffer: VariantBuffer = VariantBuffer.apply(iter1, iter2, inBothSink, inOneOnlySink, inTwoOnlySink)
     while (!buffer.isTerminal) {
-      println(s"Buffer: $buffer")
       buffer = buffer.next()
     }
   }
 
 
   trait Sink {
-    def write(variantIdLocation: VariantIdOld): Unit
+    def write(variantIdLocation: VariantId): Unit
 
-    def writeAll(variantIdLocations: Iterable[VariantIdOld]): Unit
+    def writeAll(variantIdLocations: Iterable[VariantId]): Unit
   }
 
   object Sink {
@@ -41,27 +40,26 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
   case class FileSink(file: File) extends Sink {
     val delegate = new VariantIdTsvWriter(idKey)(file)
 
-    override def write(variantIdLocation: VariantIdOld): Unit = delegate.add(variantIdLocation)
+    override def write(variantIdLocation: VariantId): Unit = delegate.add(variantIdLocation)
 
-    override def writeAll(variantIdLocations: Iterable[VariantIdOld]): Unit =
-      variantIdLocations.toSeq.sortBy(_.id).foreach(delegate.add)
+    override def writeAll(variantIdLocations: Iterable[VariantId]): Unit = variantIdLocations.foreach(delegate.add)
   }
 
   object NoOpSink extends Sink {
-    override def write(variantIdLocation: VariantIdOld): Unit = ()
+    override def write(variantIdLocation: VariantId): Unit = ()
 
-    override def writeAll(variantIdLocations: Iterable[VariantIdOld]): Unit = ()
+    override def writeAll(variantIdLocations: Iterable[VariantId]): Unit = ()
   }
 
-  final class Channels(val iter1: Iterator[VariantIdOld], val iter2: Iterator[VariantIdOld],
+  final class Channels(val iter1: Iterator[VariantId], val iter2: Iterator[VariantId],
                        val inBothSink: Sink, val inOneOnlySink: Sink, val inTwoOnlySink: Sink) {
-    def nextOpt(iter: Iterator[VariantIdOld]): Option[VariantIdOld] = {
+    def nextOpt(iter: Iterator[VariantId]): Option[VariantId] = {
       if (iter.hasNext) Some(iter.next) else None
     }
 
-    def nextOpt1: Option[VariantIdOld] = nextOpt(iter1)
+    def nextOpt1: Option[VariantId] = nextOpt(iter1)
 
-    def nextOpt2: Option[VariantIdOld] = nextOpt(iter2)
+    def nextOpt2: Option[VariantId] = nextOpt(iter2)
   }
 
   sealed trait VariantBuffer {
@@ -71,38 +69,38 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
 
     def hasLocation: Boolean = false
 
-    def variantsHere1: Set[VariantIdOld]
+    def variantsHere1: Set[VariantId]
 
-    def variantsHere2: Set[VariantIdOld]
+    def variantsHere2: Set[VariantId]
 
-    def variantAheadOpt1: Option[VariantIdOld]
+    def variantAheadOpt1: Option[VariantId]
 
-    def variantAheadOpt2: Option[VariantIdOld]
+    def variantAheadOpt2: Option[VariantId]
 
     def channels: Channels
   }
 
 
   object VariantBuffer {
-    def apply(iter1: Iterator[VariantIdOld], iter2: Iterator[VariantIdOld],
+    def apply(iter1: Iterator[VariantId], iter2: Iterator[VariantId],
               inBothSink: Sink, inOneOnlySink: Sink, inTwoOnlySink: Sink): VariantBufferFlushed =
       apply(new Channels(iter1, iter2, inBothSink, inOneOnlySink, inTwoOnlySink))
 
     def apply(channels: Channels): VariantBufferFlushed = VariantBufferFlushed(channels)
   }
 
-  final class VariantBufferFlushed(val variantAheadOpt1: Option[VariantIdOld],
-                                   val variantAheadOpt2: Option[VariantIdOld],
+  final class VariantBufferFlushed(val variantAheadOpt1: Option[VariantId],
+                                   val variantAheadOpt2: Option[VariantId],
                                    val channels: Channels)
     extends VariantBuffer {
 
     override def isTerminal: Boolean = false
 
-    def readVariantsAtLocation(location: Location, variantAhead: VariantIdOld,
-                               iter: Iterator[VariantIdOld]):
-    (Set[VariantIdOld], Option[VariantIdOld]) = {
-      var variantsHere: Set[VariantIdOld] = Set.empty
-      var variantAheadNewOpt: Option[VariantIdOld] = Some(variantAhead)
+    def readVariantsAtLocation(location: Location, variantAhead: VariantId,
+                               iter: Iterator[VariantId]):
+    (Set[VariantId], Option[VariantId]) = {
+      var variantsHere: Set[VariantId] = Set.empty
+      var variantAheadNewOpt: Option[VariantId] = Some(variantAhead)
       var keepGoing = variantAheadNewOpt.nonEmpty
       while (keepGoing) {
         val variantAheadNew = variantAheadNewOpt.get
@@ -135,9 +133,9 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
       }
     }
 
-    override def variantsHere1: Set[VariantIdOld] = Set.empty
+    override def variantsHere1: Set[VariantId] = Set.empty
 
-    override def variantsHere2: Set[VariantIdOld] = Set.empty
+    override def variantsHere2: Set[VariantId] = Set.empty
 
     override def next(): VariantBuffer = advance
 
@@ -148,27 +146,27 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
     def apply(channels: Channels): VariantBufferFlushed =
       new VariantBufferFlushed(None, None, channels)
 
-    def apply(variantAheadOpt1: Option[VariantIdOld],
-              variantAheadOpt2: Option[VariantIdOld], channels: Channels): VariantBufferFlushed =
+    def apply(variantAheadOpt1: Option[VariantId],
+              variantAheadOpt2: Option[VariantId], channels: Channels): VariantBufferFlushed =
       new VariantBufferFlushed(variantAheadOpt1, variantAheadOpt2, channels)
   }
 
   sealed trait VariantBufferDoneWithSome extends VariantBuffer {
     override def isTerminal: Boolean = false
 
-    override def variantsHere1: Set[VariantIdOld] = Set.empty
+    override def variantsHere1: Set[VariantId] = Set.empty
 
-    override def variantsHere2: Set[VariantIdOld] = Set.empty
+    override def variantsHere2: Set[VariantId] = Set.empty
   }
 
-  final class VariantBufferDoneWith1(val variantAhead2: VariantIdOld, val channels: Channels)
+  final class VariantBufferDoneWith1(val variantAhead2: VariantId, val channels: Channels)
     extends VariantBufferDoneWithSome {
-    override def variantAheadOpt1: Option[VariantIdOld] = None
+    override def variantAheadOpt1: Option[VariantId] = None
 
-    override def variantAheadOpt2: Option[VariantIdOld] = Some(variantAhead2)
+    override def variantAheadOpt2: Option[VariantId] = Some(variantAhead2)
 
     def flush2(): Unit = {
-      val write: VariantIdOld => Unit = channels.inTwoOnlySink.write
+      val write: VariantId => Unit = channels.inTwoOnlySink.write
       write(variantAhead2)
       channels.iter2.foreach(write)
     }
@@ -179,14 +177,14 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
     }
   }
 
-  final class VariantBufferDoneWith2(val variantAhead1: VariantIdOld, val channels: Channels)
+  final class VariantBufferDoneWith2(val variantAhead1: VariantId, val channels: Channels)
     extends VariantBufferDoneWithSome {
-    override def variantAheadOpt1: Option[VariantIdOld] = Some(variantAhead1)
+    override def variantAheadOpt1: Option[VariantId] = Some(variantAhead1)
 
-    override def variantAheadOpt2: Option[VariantIdOld] = None
+    override def variantAheadOpt2: Option[VariantId] = None
 
     def flush1(): Unit = {
-      val write: VariantIdOld => Unit = channels.inOneOnlySink.write
+      val write: VariantId => Unit = channels.inOneOnlySink.write
       write(variantAhead1)
       channels.iter1.foreach(write)
     }
@@ -199,18 +197,18 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
   final class VariantBufferAllDone(val channels: Channels) extends VariantBufferDoneWithSome {
     override def isTerminal: Boolean = true
 
-    override def variantAheadOpt1: Option[VariantIdOld] = None
+    override def variantAheadOpt1: Option[VariantId] = None
 
-    override def variantAheadOpt2: Option[VariantIdOld] = None
+    override def variantAheadOpt2: Option[VariantId] = None
 
     override def next(): VariantBufferAllDone = this
   }
 
   final class VariantBufferAtLocation(val location: Location,
-                                      val variantsHere1: Set[VariantIdOld],
-                                      val variantsHere2: Set[VariantIdOld],
-                                      val variantAheadOpt1: Option[VariantIdOld],
-                                      val variantAheadOpt2: Option[VariantIdOld],
+                                      val variantsHere1: Set[VariantId],
+                                      val variantsHere2: Set[VariantId],
+                                      val variantAheadOpt1: Option[VariantId],
+                                      val variantAheadOpt2: Option[VariantId],
                                       val channels: Channels)
     extends VariantBuffer {
     override def isTerminal: Boolean = false
