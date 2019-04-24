@@ -53,7 +53,7 @@ object VariantIdOld {
     }
   }
 
-  class VariantIdLocationTsvReader(val idKey: String, val chromosomeKey: String,
+  private class VariantIdLocationTsvReader(val idKey: String, val chromosomeKey: String,
                                    val positionKey: String)(val file: File) extends Iterator[VariantIdOld] {
     val tsvReader: TsvReader = TsvReader.forSimpleHeaderLine(file)
 
@@ -67,7 +67,7 @@ object VariantIdOld {
     override def next(): VariantIdOld = delegate.next()
   }
 
-  class VariantIdLocationTsvWriter(val idKey: String, val chromosomeKey: String,
+  private class VariantIdLocationTsvWriter(val idKey: String, val chromosomeKey: String,
                                    val positionKey: String)(val file: File) {
     val tsvWriter = new TsvWriter(file, Seq(idKey, chromosomeKey, positionKey))
 

@@ -1,8 +1,8 @@
 package chowser.execute
 
 import better.files.File
+import chowser.genomics.VariantIdNew.VariantIdTsvWriter
 import chowser.genomics.{Location, VariantIdOld}
-import chowser.genomics.VariantIdOld.VariantIdLocationTsvWriter
 
 case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: String) {
 
@@ -39,7 +39,7 @@ case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: St
   }
 
   case class FileSink(file: File) extends Sink {
-    val delegate = new VariantIdLocationTsvWriter(idKey, chromosomeKey, positionKey)(file)
+    val delegate = new VariantIdTsvWriter(idKey)(file)
 
     override def write(variantIdLocation: VariantIdOld): Unit = delegate.add(variantIdLocation)
 

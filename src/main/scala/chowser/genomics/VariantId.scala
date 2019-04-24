@@ -4,4 +4,5 @@ trait VariantId {
 
   def location: Location
 
+
 }

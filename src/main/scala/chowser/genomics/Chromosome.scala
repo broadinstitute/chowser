@@ -3,6 +3,8 @@ package chowser.genomics
 import chowser.util.NumberParser
 
 sealed trait Chromosome extends Ordered[Chromosome] {
+  override def toString: String = inEnsembleNotation
+
   def inEnsembleNotation: String
 
   def inUcscNotation: String = "chr" + inEnsembleNotation
