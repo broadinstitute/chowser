@@ -4,7 +4,7 @@ import better.files.File
 import chowser.genomics.VariantId.VariantIdTsvWriter
 import chowser.genomics.{Location, VariantId}
 
-case class VariantComparer(idKey: String, chromosomeKey: String, positionKey: String) {
+case class VariantMatcher(idKey: String) {
 
   def compare(file1: File, file2: File,
               fileToIter1: File => Iterator[VariantId], fileToIter2: File => Iterator[VariantId],
