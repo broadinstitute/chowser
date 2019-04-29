@@ -3,8 +3,9 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvFilterCommand, TsvSortCommand, VariantsForRegionCommand, VariantsRegionsCommand}
+import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvFilterCommand, TsvSortCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
 import chowser.filter.DoubleFilters
+import chowser.genomics.{Chromosome, Region}
 import org.rogach.scallop.{ScallopConf, Subcommand}
 
 import scala.language.reflectiveCalls
@@ -47,6 +48,10 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val chromCol = opt[String]("chrom-col", required = true, descr = "Name of column containing chromosome")
       val posCol = opt[String]("pos-col", required = true, descr = "Name of column containing position")
     }
+    trait IdCol {
+      _: ScallopConf =>
+      val idCol = opt[String]("id-col", required = true, descr = "Name of column containing variant ids")
+    }
     val regions = new Subcommand("regions") with OneInFile with OneOutFile with ChromPosCols {
       val radius = opt[Int]("radius", required = true, descr = "Minimum distance to be included on each side.")
     }
@@ -58,6 +63,13 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val end = opt[Int](name = "end", required = true, descr = "End position of region.")
     }
     addSubcommand(forRegion)
+    val forRegionById = new Subcommand("for-region-by-id")
+      with OneInFile with OneOutFile with IdCol {
+      val chrom = opt[String](name = "chrom", required = true, descr = "Chromosome on which region lies.")
+      val start = opt[Int](name = "start", required = true, descr = "Start position of region.")
+      val end = opt[Int](name = "end", required = true, descr = "End position of region.")
+    }
+    addSubcommand(forRegionById)
   }
   addSubcommand(variants)
   val compare = new Subcommand("match") {
@@ -113,10 +125,27 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out().toScala
         val chromColName = subcommand.chromCol()
         val posColName = subcommand.posCol()
-        val chromosome = subcommand.chrom()
+        val chromosomeEither = Chromosome.parse(subcommand.chrom())
         val start = subcommand.start()
         val end = subcommand.end()
-        Right(VariantsForRegionCommand(inFile, outFile, chromColName, posColName, chromosome, start, end))
+        chromosomeEither match {
+          case Left(message) => Left("Couldn't parse chromosome:" + message)
+          case Right(chromosome) =>
+            Right(VariantsForRegionCommand(inFile, outFile, chromColName, posColName, Region(chromosome, start, end)))
+        }
+      case List(this.variants, this.variants.forRegionById) =>
+        val subcommand = variants.forRegionById
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        val idColName = subcommand.idCol()
+        val chromosomeEither = Chromosome.parse(subcommand.chrom())
+        val start = subcommand.start()
+        val end = subcommand.end()
+        chromosomeEither match {
+          case Left(message) => Left("Couldn't parse chromosome:" + message)
+          case Right(chromosome) =>
+            Right(VariantsForRegionByIdCommand(inFile, outFile, idColName, Region(chromosome, start, end)))
+        }
       case List(this.compare, this.compare.variants) =>
         val subcommand = compare.variants
         val vcfFile = subcommand.vcf().toScala

@@ -1,6 +1,6 @@
 import sbt.project
 
-val chowserV = "1.3.1"
+val chowserV = "1.4.0"
 val scalaV = "2.12.8"
 val scalaTestV = "3.0.5"
 val betterFilesV = "3.7.1"

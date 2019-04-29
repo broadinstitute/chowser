@@ -2,7 +2,7 @@ package chowser.execute
 
 import chowser.cmd.VariantsRegionsCommand
 import chowser.tsv.{TsvReader, TsvWriter}
-import chowser.util.regions.{CanonicalRegions, Region}
+import chowser.util.intervals.{CanonicalIntervals, Interval}
 
 object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
 
@@ -12,14 +12,14 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
   def execute(command: VariantsRegionsCommand): Result = {
     import command.{inFile, outFile, chromColName, posColName, radius }
     val rowIterator = TsvReader.forSimpleHeaderLine(inFile)
-    var regionsByChromosome: Map[String, CanonicalRegions] = Map.empty
+    var regionsByChromosome: Map[String, CanonicalIntervals] = Map.empty
     for(row <- rowIterator) {
       val chromosome = row.string(chromColName)
-      val regionsOld = regionsByChromosome.getOrElse(chromosome, CanonicalRegions.empty)
+      val regionsOld = regionsByChromosome.getOrElse(chromosome, CanonicalIntervals.empty)
       val position = row.unsignedInt(posColName)
       val regionStart = Math.max(0, position - radius)
       val regionEnd = position + radius
-      val region = Region(regionStart, regionEnd)
+      val region = Interval(regionStart, regionEnd)
       val regionsNew = regionsOld :+ region
       regionsByChromosome += (chromosome -> regionsNew)
     }
@@ -30,7 +30,7 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
     val writer = TsvWriter(outFile, Seq(chromColName, startColName, endColName))
     for(chromosome <- chromosomes) {
       val regions = regionsByChromosome(chromosome)
-      for(region <- regions.regions) {
+      for(region <- regions.intervals) {
         writer.addRow(chromosome, region.start.toString, region.end.toString)
       }
     }
