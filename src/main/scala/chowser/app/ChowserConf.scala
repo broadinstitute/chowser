@@ -3,7 +3,7 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvFilterCommand, TsvSortCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
+import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvFilterCommand, TsvSortCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
 import chowser.filter.DoubleFilters
 import chowser.genomics.{Chromosome, Region}
 import org.rogach.scallop.{ScallopConf, Subcommand}
@@ -39,6 +39,11 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val col = opt[String]("col", required = true, descr = "Name of column to sort by")
     }
     addSubcommand(sort)
+    val extractUnique = new Subcommand("extract-unique") with OneInFile with OneOutFile {
+      banner("usage: chowser tsv extract-unique [OPTIONS]\nExtract unique values of a column of tab-separated file")
+      val col = opt[String]("col", required = true, descr = "Name of column")
+    }
+    addSubcommand(extractUnique)
   }
   addSubcommand(tsv)
   val variants = new Subcommand("variants") {
@@ -111,6 +116,12 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out().toScala
         val colName = subcommand.col()
         Right(TsvSortCommand(inFile, outFile, colName))
+      case List(this.tsv, this.tsv.extractUnique) =>
+        val subcommand = tsv.extractUnique
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        val colName = subcommand.col()
+        Right(TsvExtractUniqueCommand(inFile, outFile, colName))
       case List(this.variants, this.variants.regions) =>
         val subcommand = variants.regions
         val inFile = subcommand.in().toScala
