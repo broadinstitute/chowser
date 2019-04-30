@@ -3,7 +3,7 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvFilterCommand, TsvSortCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
+import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvFilterCommand, TsvSortCommand, VariantsCanonicalizeTsvCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
 import chowser.filter.DoubleFilters
 import chowser.genomics.{Chromosome, Region}
 import org.rogach.scallop.{ScallopConf, Subcommand}
@@ -75,6 +75,14 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val end = opt[Int](name = "end", required = true, descr = "End position of region.")
     }
     addSubcommand(forRegionById)
+    val canonicalizeTsv = new Subcommand("canonicalize-tsv")
+      with OneInFile with OneOutFile with IdCol with ChromPosCols {
+      val refCol =
+        opt[String](name = "ref-col", required = true, descr = "Name of column containing reference allele.")
+      val altCol =
+        opt[String](name = "alt-col", required = true, descr = "Name of column containing alternate allele.")
+    }
+    addSubcommand(canonicalizeTsv)
   }
   addSubcommand(variants)
   val compare = new Subcommand("match") {
@@ -157,6 +165,16 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
           case Right(chromosome) =>
             Right(VariantsForRegionByIdCommand(inFile, outFile, idColName, Region(chromosome, start, end)))
         }
+      case List(this.variants, this.variants.canonicalizeTsv) =>
+        val subcommand = variants.canonicalizeTsv
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        val idCol = subcommand.idCol()
+        val chromCol = subcommand.chromCol()
+        val posCol = subcommand.posCol()
+        val refCol = subcommand.refCol()
+        val altCol = subcommand.altCol()
+        Right(VariantsCanonicalizeTsvCommand(inFile, outFile, idCol, chromCol, posCol, refCol, altCol))
       case List(this.compare, this.compare.variants) =>
         val subcommand = compare.variants
         val vcfFile = subcommand.vcf().toScala

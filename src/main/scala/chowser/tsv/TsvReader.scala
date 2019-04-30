@@ -27,6 +27,12 @@ object TsvReader {
     def string(colName: String): String = valueMap(colName)
 
     def unsignedInt(colName: String): Int = NumberParser.UnsignedIntParser.parse(valueMap(colName))
+
+    def withValue(key: String, value: String): Row = {
+      val valueMapNew = valueMap + (key -> value)
+      val lineNew = cols.map(valueMapNew.getOrElse(_, "")).mkString("\t")
+      copy(line = lineNew, valueMap = valueMapNew)
+    }
   }
 
   trait LineCleaner {
