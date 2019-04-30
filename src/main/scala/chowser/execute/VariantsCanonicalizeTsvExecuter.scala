@@ -8,14 +8,13 @@ import chowser.util.NumberParser
 object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonicalizeTsvCommand] {
 
   def execute(command: VariantsCanonicalizeTsvCommand): Result = {
-    import command.{inFile, outFile, idCol, chromosomeCol, positionCol, refCol, altCol}
+    import command._
     val reader = TsvReader.forSimpleHeaderLine(inFile)
     if (outFile.nonEmpty) {
       outFile.clear()
     }
-    println("yo!")
     reader.headerLines.foreach(outFile.appendLine(_))
-    reader.map(updateWithCanonicalId(idCol, chromosomeCol, positionCol, refCol, altCol, println))
+    reader.map(updateWithCanonicalId(idCol, chromosomeCol, positionCol, refCol, altCol, _ => ()))
       .map(_.line).foreach(outFile.appendLine(_))
     Result(command, success = true)
   }
@@ -26,10 +25,8 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
     createCanonicalId(row.valueMap, idCol, chromosomeCol, positionCol, refCol, altCol) match {
       case Left(message) =>
         reporter(message)
-        println(message)
         row
       case Right(variantId) =>
-        println(variantId)
         row.withValue(idCol, variantId.toString)
     }
   }
