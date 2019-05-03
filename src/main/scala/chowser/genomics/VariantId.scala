@@ -7,7 +7,7 @@ import htsjdk.variant.variantcontext.VariantContext
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 
-case class VariantId(location: Location, ref: String, alt: String) {
+case class VariantId(location: Location, ref: String, alt: String) extends Location.HasLocation {
 
   override def toString: String = Seq(location.chromosome, location.position, ref, alt).map(_.toString).mkString("_")
 
@@ -36,10 +36,11 @@ object VariantId {
     }
   }
 
-  val dividerRegex: String = "[^a-zA-Z0-9-]"
+  val coordinateDividerRegex: String = "[^a-zA-Z0-9-,]"
+  val altsDividerRegex = ","
 
   def parse(string: String): Either[String, VariantId] = {
-    val parts = string.split(dividerRegex)
+    val parts = string.split(coordinateDividerRegex)
     if(parts.size < 4 || parts.size > 5) {
       Left(s"""Unrecognized format of variant id \"$string\"""")
     } else {
