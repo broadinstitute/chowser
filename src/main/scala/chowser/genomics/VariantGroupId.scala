@@ -1,12 +1,16 @@
 package chowser.genomics
 
+import better.files.File
 import chowser.genomics.VariantId.coordinateDividerRegex
+import chowser.tsv.{TsvReader, TsvWriter}
 import chowser.util.NumberParser
 import htsjdk.variant.variantcontext.VariantContext
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 
 case class VariantGroupId(location: Location, ref: String, alts: Seq[String]) extends Location.HasLocation {
+
+  def alleles: Seq[String] = ref +: alts
 
   def variants: Seq[VariantId] = {
     alts.map(alt => VariantId(chromosome, position, ref, alt))
@@ -34,6 +38,10 @@ object VariantGroupId {
     }
   }
 
+  def parseAlts(altsString: String): Seq[String] = {
+    altsString.split(VariantId.altsDividerRegex).map(VariantId.adjustSequenceIfEmpty).toSeq
+  }
+
   def parse(string: String): Either[String, VariantGroupId] = {
     val parts = string.split(coordinateDividerRegex)
     if(parts.size < 4 || parts.size > 5) {
@@ -47,11 +55,36 @@ object VariantGroupId {
             case None => Left(s"""Invalid format for position \"$posString\"""")
             case Some(pos) =>
               val ref = VariantId.adjustSequenceIfEmpty(parts(2))
-              val alts = parts(3).split(VariantId.altsDividerRegex).map(VariantId.adjustSequenceIfEmpty).toSeq
+              val alts = parseAlts(parts(3))
               Right(VariantGroupId(chromosome, pos, ref, alts))
           }
       }
     }
   }
+
+  class VariantGroupIdTsvReader(val idKey: String)(val file: File) extends Iterator[VariantGroupId] {
+    val tsvReader: TsvReader = TsvReader.forSimpleHeaderLine(file)
+
+    val delegate: Iterator[VariantGroupId] =
+      tsvReader.map(_.valueMap).map(_.get(idKey)).collect {
+        case Some(id) => id
+      }.map(parse).collect {
+        case Right(variantId) => variantId
+      }
+
+    override def hasNext: Boolean = delegate.hasNext
+
+    override def next(): VariantGroupId = delegate.next()
+  }
+
+  class VariantGroupIdTsvWriter(val idKey: String)(val file: File) {
+    val tsvWriter = new TsvWriter(file, Seq(idKey))
+
+    def add(variantGroupId: VariantGroupId): Unit = {
+      tsvWriter.addRow(Map(idKey -> variantGroupId.toString))
+    }
+  }
+
+
 
 }

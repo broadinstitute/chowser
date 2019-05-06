@@ -1,7 +1,7 @@
 package chowser.execute
 
 import chowser.cmd.VariantsCanonicalizeTsvCommand
-import chowser.genomics.{Chromosome, VariantId}
+import chowser.genomics.{Chromosome, VariantGroupId, VariantId}
 import chowser.tsv.TsvReader
 import chowser.util.NumberParser
 
@@ -26,13 +26,13 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
       case Left(message) =>
         reporter(message)
         row
-      case Right(variantId) =>
-        row.withValue(idCol, variantId.toString)
+      case Right(variantGroupId) =>
+        row.withValue(idCol, variantGroupId.toString)
     }
   }
 
   def createCanonicalId(values: Map[String, String], idCol: String, chromosomeCol: String,
-                        positionCol: String, refCol: String, altCol: String): Either[String, VariantId] = {
+                        positionCol: String, refCol: String, altCol: String): Either[String, VariantGroupId] = {
     values.get(chromosomeCol) match {
       case Some(chromosomeString) =>
         Chromosome.parse(chromosomeString) match {
@@ -45,7 +45,9 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
                     values.get(refCol) match {
                       case Some(ref) =>
                         values.get(altCol) match {
-                          case Some(alt) => Right(VariantId(chromosome, position, ref, alt))
+                          case Some(altsString) =>
+                            val alts = VariantGroupId.parseAlts(altsString)
+                            Right(VariantGroupId(chromosome, position, ref, alts))
                           case None => Left("No alt")
                         }
                       case None => Left("No ref")
