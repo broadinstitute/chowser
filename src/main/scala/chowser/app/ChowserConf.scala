@@ -3,7 +3,7 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvFilterCommand, TsvSortCommand, VariantsCanonicalizeTsvCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
+import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvFilterCommand, TsvSortCommand, VariantsCanonicalizeTsvCommand, VariantsCanonicalizeVcfCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
 import chowser.filter.DoubleFilters
 import chowser.genomics.{Chromosome, Region}
 import org.rogach.scallop.{ScallopConf, Subcommand}
@@ -75,6 +75,10 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val end = opt[Int](name = "end", required = true, descr = "End position of region.")
     }
     addSubcommand(forRegionById)
+    val canonicalizeVcf = new Subcommand("canonicalize-vcf")
+      with OneInFile with OneOutFile {
+    }
+    addSubcommand(canonicalizeVcf)
     val canonicalizeTsv = new Subcommand("canonicalize-tsv")
       with OneInFile with OneOutFile with IdCol with ChromPosCols {
       val refCol =
@@ -165,6 +169,11 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
           case Right(chromosome) =>
             Right(VariantsForRegionByIdCommand(inFile, outFile, idColName, Region(chromosome, start, end)))
         }
+      case List(this.variants, this.variants.canonicalizeVcf) =>
+        val subcommand = variants.canonicalizeVcf
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        Right(VariantsCanonicalizeVcfCommand(inFile, outFile))
       case List(this.variants, this.variants.canonicalizeTsv) =>
         val subcommand = variants.canonicalizeTsv
         val inFile = subcommand.in().toScala

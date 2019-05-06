@@ -1,7 +1,7 @@
 package chowser.execute
 
 import chowser.cmd.VariantsCanonicalizeTsvCommand
-import chowser.genomics.{Chromosome, VariantGroupId, VariantId}
+import chowser.genomics.{Chromosome, VariantGroupId}
 import chowser.tsv.TsvReader
 import chowser.util.NumberParser
 
