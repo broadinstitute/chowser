@@ -14,6 +14,10 @@ trait Filter[-T] extends (T => Boolean) {
 
 object Filter {
 
+  case class Equal[-T](value: T) extends Filter[T] {
+    override def apply(value: T): Boolean = value == this.value
+  }
+
   class FilterAll[T] extends Filter[T] {
     override def apply(value: T): Boolean = true
 

@@ -3,8 +3,8 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvFilterCommand, TsvSortCommand, VariantsCanonicalizeTsvCommand, VariantsCanonicalizeVcfCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
-import chowser.filter.DoubleFilters
+import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvRangeCommand, TsvSliceCommand, TsvSortCommand, VariantsCanonicalizeTsvCommand, VariantsCanonicalizeVcfCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
+import chowser.filter.{DoubleFilters, Filter, StringFilters}
 import chowser.genomics.{Chromosome, Region}
 import org.rogach.scallop.{ScallopConf, Subcommand}
 
@@ -26,14 +26,20 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
 
   val tsv = new Subcommand("tsv") {
     banner("Usage: chowser tsv filter [OPTIONS] \nConsume tab-separated file")
-    val filter = new Subcommand("filter") with OneInFile with OneOutFile {
-      banner("usage: chowser tsv filter [OPTIONS]\nFilter records of tab-separated file")
+    val range = new Subcommand("range") with OneInFile with OneOutFile {
+      banner("usage: chowser tsv range [OPTIONS]\nFilter records by numeric range")
       val col = opt[String]("col", required = true, descr = "Name of column to apply condition")
       val lt = opt[Double]("lt", descr = "Retain records with value less than given value")
       val gt = opt[Double]("gt", descr = "Retain records with value greater than given value")
       requireAtLeastOne(lt, gt)
     }
-    addSubcommand(filter)
+    addSubcommand(range)
+    val slice = new Subcommand("slice") with OneInFile with OneOutFile {
+      banner("usage: chowser tsv slice [OPTIONS]\nFilter records by numeric range")
+      val col = opt[String]("col", required = true, descr = "Name of column to apply condition")
+      val value = opt[String]("value", required = true, descr = "Required value")
+    }
+    addSubcommand(slice)
     val sort = new Subcommand("sort") with OneInFile with OneOutFile {
       banner("usage: chowser tsv sort [OPTIONS]\nSort records of tab-separated file")
       val col = opt[String]("col", required = true, descr = "Name of column to sort by")
@@ -48,15 +54,18 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   addSubcommand(tsv)
   val variants = new Subcommand("variants") {
     banner("Usage: chowser variants regions [OPTIONS]\nConsume file containing variants")
+
     trait ChromPosCols {
       _: ScallopConf =>
       val chromCol = opt[String]("chrom-col", required = true, descr = "Name of column containing chromosome")
       val posCol = opt[String]("pos-col", required = true, descr = "Name of column containing position")
     }
+
     trait IdCol {
       _: ScallopConf =>
       val idCol = opt[String]("id-col", required = true, descr = "Name of column containing variant ids")
     }
+
     val regions = new Subcommand("regions") with OneInFile with OneOutFile with ChromPosCols {
       val radius = opt[Int]("radius", required = true, descr = "Minimum distance to be included on each side.")
     }
@@ -108,8 +117,8 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
 
   def toChowserCommand: Either[String, ChowserCommand] = {
     subcommands match {
-      case List(this.tsv, this.tsv.filter) =>
-        val subcommand = tsv.filter
+      case List(this.tsv, this.tsv.range) =>
+        val subcommand = tsv.range
         val inFile = subcommand.in().toScala
         val outFile = subcommand.out().toScala
         val colName = subcommand.col()
@@ -121,7 +130,14 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
           case (None, Some(lowerLimit)) => lowerLimit
           case (None, None) => DoubleFilters.all
         }
-        Right(TsvFilterCommand(inFile, outFile, colName, numberFilter))
+        Right(TsvRangeCommand(inFile, outFile, colName, numberFilter))
+      case List(this.tsv, this.tsv.slice) =>
+        val subcommand = tsv.slice
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        val colName = subcommand.col()
+        val value = subcommand.value()
+        Right(TsvSliceCommand(inFile, outFile, colName, Filter.Equal(value)))
       case List(this.tsv, this.tsv.sort) =>
         val subcommand = tsv.sort
         val inFile = subcommand.in().toScala
@@ -140,7 +156,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out().toScala
         val chromColName = subcommand.chromCol()
         val posColName = subcommand.posCol()
-        val radius  = subcommand.radius()
+        val radius = subcommand.radius()
         Right(VariantsRegionsCommand(inFile, outFile, chromColName, posColName, radius))
       case List(this.variants, this.variants.forRegion) =>
         val subcommand = variants.forRegion

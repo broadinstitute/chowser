@@ -1,18 +1,18 @@
 package chowser.execute
 
-import chowser.cmd.TsvFilterCommand
+import chowser.cmd.TsvRangeCommand
 import chowser.filter.{RowFilters, StringFilters}
 import chowser.tsv.TsvReader
 
-object TsvFilterExecuter extends ChowserExecuter[TsvFilterCommand] {
+object TsvRangeExecuter extends ChowserExecuter[TsvRangeCommand] {
 
-  def execute(command: TsvFilterCommand): Result = {
+  def execute(command: TsvRangeCommand): Result = {
     import command.{inFile, outFile, colName, filter}
     val rowFilter = RowFilters.ForCol(colName, StringFilters.parsesAsDoubleAndFilter(filter))
     ExecutionUtils.filterRows(inFile, outFile, TsvReader.forSimpleHeaderLine(_), rowFilter)
     Result(command, success = true)
   }
 
-  case class Result(command: TsvFilterCommand, success: Boolean) extends ChowserExecuter.Result[TsvFilterCommand]
+  case class Result(command: TsvRangeCommand, success: Boolean) extends ChowserExecuter.Result[TsvRangeCommand]
 
 }

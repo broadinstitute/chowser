@@ -1,6 +1,6 @@
 package chowser.execute
 
-import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvFilterCommand, TsvSortCommand, VariantsCanonicalizeTsvCommand, VariantsCanonicalizeVcfCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
+import chowser.cmd.{ChowserCommand, MatchVariantsCommand, TsvExtractUniqueCommand, TsvRangeCommand, TsvSliceCommand, TsvSortCommand, VariantsCanonicalizeTsvCommand, VariantsCanonicalizeVcfCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsRegionsCommand}
 
 trait ChowserExecuter[C <: ChowserCommand] {
   def execute(command: C): ChowserExecuter.Result[C]
@@ -15,7 +15,8 @@ object ChowserExecuter {
 
   def execute(command: ChowserCommand): Result[ChowserCommand] = {
     command match {
-      case tsvFilterCommand: TsvFilterCommand => TsvFilterExecuter.execute(tsvFilterCommand)
+      case tsvRangeCommand: TsvRangeCommand => TsvRangeExecuter.execute(tsvRangeCommand)
+      case tsvSliceCommand: TsvSliceCommand => TsvSliceExecuter.execute(tsvSliceCommand)
       case tsvSortCommand: TsvSortCommand => TsvSortExecuter.execute(tsvSortCommand)
       case tsvExtractUniqueCommand: TsvExtractUniqueCommand =>
         TsvExtractUniqueExecuter.execute(tsvExtractUniqueCommand)
