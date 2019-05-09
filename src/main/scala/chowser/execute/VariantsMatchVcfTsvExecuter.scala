@@ -1,15 +1,15 @@
 package chowser.execute
 
 import better.files.File
-import chowser.cmd.MatchVariantsCommand
+import chowser.cmd.VariantsMatchVcfTsvCommand
 import chowser.genomics.VariantGroupId
 import chowser.genomics.VariantGroupId.VariantGroupIdTsvReader
 import htsjdk.variant.vcf.VCFFileReader
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
-object MatchVariantsExecuter extends ChowserExecuter[MatchVariantsCommand] {
-  override def execute(command: MatchVariantsCommand): Result = {
+object VariantsMatchVcfTsvExecuter extends ChowserExecuter[VariantsMatchVcfTsvCommand] {
+  override def execute(command: VariantsMatchVcfTsvCommand): Result = {
     import command._
     val vcfToIter: File => Iterator[VariantGroupId] = { file =>
       val reader = new VCFFileReader(file.path, false)
@@ -25,6 +25,6 @@ object MatchVariantsExecuter extends ChowserExecuter[MatchVariantsCommand] {
     Result(command, success = true)
   }
 
-  case class Result(command: MatchVariantsCommand, success: Boolean)
-    extends ChowserExecuter.Result[MatchVariantsCommand]
+  case class Result(command: VariantsMatchVcfTsvCommand, success: Boolean)
+    extends ChowserExecuter.Result[VariantsMatchVcfTsvCommand]
 }
