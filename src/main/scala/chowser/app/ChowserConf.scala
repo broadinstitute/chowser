@@ -3,8 +3,8 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
-import chowser.cmd.{ChowserCommand, TsvExtractUniqueCommand, TsvRangeCommand, TsvSliceCommand, TsvSortCommand, VariantsCanonicalizeTsvCommand, VariantsCanonicalizeVcfCommand, VariantsForRegionByIdCommand, VariantsForRegionCommand, VariantsMatchTsvTsvCommand, VariantsMatchVcfTsvCommand, VariantsRegionsCommand}
-import chowser.filter.{DoubleFilters, Filter, StringFilters}
+import chowser.cmd._
+import chowser.filter.{DoubleFilters, Filter}
 import chowser.genomics.{Chromosome, Region}
 import org.rogach.scallop.{ScallopConf, Subcommand}
 
@@ -112,11 +112,26 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val idCol1 = opt[String](name = "id-col1", required = true, descr = "Variant id column name in TSV file 1")
       val idCol2 = opt[String](name = "id-col2", required = true, descr = "Variant id column name in TSV file 2")
       val inBoth = opt[JFile](name = "in-both", descr = "Output file with variants in both TSV files.")
-      val inOneOnly = opt[JFile](name = "in-one-only", descr = "Output file with variants only in TSV file 1.")
-      val inTwoOnly = opt[JFile](name = "in-two-only", descr = "Output file with variants only in TSV file 2.")
+      val inOneOnly = opt[JFile](name = "tsv1-only", descr = "Output file with variants only in TSV file 1.")
+      val inTwoOnly = opt[JFile](name = "tsv2-only", descr = "Output file with variants only in TSV file 2.")
       requireAtLeastOne(inBoth, inOneOnly, inTwoOnly)
     }
     addSubcommand(matchTsvTsv)
+    val selectTsv = new Subcommand("select-tsv") with OneOutFile {
+      val data = opt[JFile](name = "data", required = true, descr = "File with data to to select.")
+      val selection = opt[JFile](name = "selection", required = true, descr = "Ids of variants to select..")
+      val idColData = opt[String](name = "id-col-data", required = true, descr = "Column with variant ids in data.")
+      val idColSelection =
+        opt[String](name = "id-col-selection", required = true, descr = "Column with variant ids in selection.")
+    }
+    addSubcommand(selectTsv)
+    val selectVcf = new Subcommand("select-vcf") with OneOutFile {
+      val data = opt[JFile](name = "data", required = true, descr = "File with data to to select.")
+      val selection = opt[JFile](name = "selection", required = true, descr = "Ids of variants to select..")
+      val idColSelection =
+        opt[String](name = "id-col-selection", required = true, descr = "Column with variant ids in selection.")
+    }
+    addSubcommand(selectVcf)
   }
   addSubcommand(variants)
   requireSubcommand()
@@ -230,6 +245,21 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         Right(
           VariantsMatchTsvTsvCommand(vcfFile, tsvFile, idCol1, idCol2, inBothOpt, inOneOnly, inTwoOnly)
         )
+      case List(this.variants, this.variants.selectTsv) =>
+        val subcommand = variants.selectTsv
+        val dataFile = subcommand.data().toScala
+        val selectionFile = subcommand.selection().toScala
+        val outFile = subcommand.out().toScala
+        val idColData = subcommand.idColData()
+        val idColSelection = subcommand.idColSelection()
+        Right(VariantsSelectTsvCommand(dataFile, selectionFile, outFile, idColData, idColSelection))
+      case List(this.variants, this.variants.selectVcf) =>
+        val subcommand = variants.selectVcf
+        val dataFile = subcommand.data().toScala
+        val selectionFile = subcommand.selection().toScala
+        val outFile = subcommand.out().toScala
+        val idColSelection = subcommand.idColSelection()
+        Right(VariantsSelectVcfCommand(dataFile, selectionFile, outFile, idColSelection))
       case _ => Left("Invalid combination of commands.")
     }
   }
