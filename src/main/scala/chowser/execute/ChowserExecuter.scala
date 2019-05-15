@@ -37,6 +37,7 @@ object ChowserExecuter {
         VariantsSelectTsvExecuter.execute(variantsSelectTsvCommand)
       case variantsSelectVcfCommand: VariantsSelectVcfCommand =>
         VariantsSelectVcfExecuter.execute(variantsSelectVcfCommand)
+      case caviarPToZCommand: CaviarPToZCommand => CaviarPToZExecuter.execute(caviarPToZCommand)
     }
   }
 

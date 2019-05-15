@@ -144,6 +144,14 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
     addSubcommand(selectVcf)
   }
   addSubcommand(variants)
+  val caviar = new Subcommand("caviar") {
+    val pToZ = new Subcommand("p-tp-z") with OneInFile with OneOutFile {
+      val idCol = opt[String]("id-col", required = true, descr = "Name of id column in p-values file.")
+      val pCol = opt[String]("p-col", required = true, descr = "Name of p-value column in p-values file.")
+    }
+    addSubcommand(pToZ)
+  }
+  addSubcommand(caviar)
   requireSubcommand()
   verify()
 
@@ -280,6 +288,13 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out().toScala
         val idColSelection = subcommand.idColSelection()
         Right(VariantsSelectVcfCommand(dataFile, selectionFile, outFile, idColSelection))
+      case List(this.caviar, this.caviar.pToZ) =>
+        val subcommand = caviar.pToZ
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        val idCol = subcommand.idCol()
+        val pCol = subcommand.pCol()
+        Right(CaviarPToZCommand(inFile, outFile, idCol, pCol))
       case _ => Left("Invalid combination of commands.")
     }
   }
