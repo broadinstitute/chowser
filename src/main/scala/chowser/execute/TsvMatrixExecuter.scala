@@ -24,8 +24,13 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
     val idToIndex: Map[String, Int] = ids.zipWithIndex.toMap
 
     def put(id1: String, id2: String, value: String): Unit = {
-      elements(id1)(id2) = value
-      elements(id2)(id1) = value
+      (idToIndex.get(id1), idToIndex.get(id2)) match {
+        case (Some(index1), Some(index2)) =>
+          elements(index1)(index2) = value
+          elements(index2)(index1) = value
+        case _ => ()
+
+      }
     }
 
     def writeTo(file: File): Unit = {
