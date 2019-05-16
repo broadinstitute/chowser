@@ -137,8 +137,8 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   val caviar = new Subcommand("caviar") {
     val matrix = new Subcommand("matrix") with OneOutFile {
       banner("usage: chowser tsv matrix [OPTIONS]\nReshape list of values into matrix form")
-      val valuesFile = opt[JFile]("values", required = true, descr = "File with values")
-      val idsFile = opt[JFile]("ids", required = true, descr = "VCF File for ids")
+      val valuesFile = opt[JFile]("values-file", required = true, descr = "File with values")
+      val idsFile = opt[JFile]("ids-file", required = true, descr = "VCF File for ids")
       val valueCol = opt[String]("value-col", required = true, descr = "Name of value column in values file.")
       val idCol1 = opt[String]("id-col1", required = true, descr = "Name of first id column in values file.")
       val idCol2 = opt[String]("id-col2", required = true, descr = "Name of second id column in values file.")
