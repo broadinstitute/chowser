@@ -50,16 +50,6 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val col = opt[String]("col", required = true, descr = "Name of column")
     }
     addSubcommand(extractUnique)
-    val matrix = new Subcommand("matrix") with OneOutFile {
-      banner("usage: chowser tsv matrix [OPTIONS]\nReshape list of values into matrix form")
-      val valuesFile = opt[JFile]("values", required = true, descr = "File with values")
-      val idsFile = opt[JFile]("ids", required = true, descr = "File with ids")
-      val idCol = opt[String]("id-col", required = true, descr = "Name of id column in ids file.")
-      val valueCol = opt[String]("value-col", required = true, descr = "Name of value column in values file.")
-      val idCol1 = opt[String]("id-col1", required = true, descr = "Name of first id column in values file.")
-      val idCol2 = opt[String]("id-col2", required = true, descr = "Name of second id column in values file.")
-    }
-    addSubcommand(matrix)
   }
   addSubcommand(tsv)
   val variants = new Subcommand("variants") {
@@ -145,7 +135,16 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   }
   addSubcommand(variants)
   val caviar = new Subcommand("caviar") {
-    val pToZ = new Subcommand("p-tp-z") with OneInFile with OneOutFile {
+    val matrix = new Subcommand("matrix") with OneOutFile {
+      banner("usage: chowser tsv matrix [OPTIONS]\nReshape list of values into matrix form")
+      val valuesFile = opt[JFile]("values", required = true, descr = "File with values")
+      val idsFile = opt[JFile]("ids", required = true, descr = "VCF File for ids")
+      val valueCol = opt[String]("value-col", required = true, descr = "Name of value column in values file.")
+      val idCol1 = opt[String]("id-col1", required = true, descr = "Name of first id column in values file.")
+      val idCol2 = opt[String]("id-col2", required = true, descr = "Name of second id column in values file.")
+    }
+    addSubcommand(matrix)
+    val pToZ = new Subcommand("p-to-z") with OneInFile with OneOutFile {
       val idCol = opt[String]("id-col", required = true, descr = "Name of id column in p-values file.")
       val pCol = opt[String]("p-col", required = true, descr = "Name of p-value column in p-values file.")
     }
@@ -190,16 +189,6 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out().toScala
         val colName = subcommand.col()
         Right(TsvExtractUniqueCommand(inFile, outFile, colName))
-      case List(this.tsv, this.tsv.matrix) =>
-        val subcommand = tsv.matrix
-        val valuesFile = subcommand.valuesFile().toScala
-        val idsFile = subcommand.idsFile().toScala
-        val outFile = subcommand.out().toScala
-        val idCol = subcommand.idCol()
-        val idCol1 = subcommand.idCol1()
-        val idCol2 = subcommand.idCol2()
-        val valueCol = subcommand.valueCol()
-        Right(TsvMatrixCommand(valuesFile, idsFile, outFile, idCol, idCol1, idCol2, valueCol))
       case List(this.variants, this.variants.regions) =>
         val subcommand = variants.regions
         val inFile = subcommand.in().toScala
@@ -288,6 +277,15 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out().toScala
         val idColSelection = subcommand.idColSelection()
         Right(VariantsSelectVcfCommand(dataFile, selectionFile, outFile, idColSelection))
+      case List(this.caviar, this.caviar.matrix) =>
+        val subcommand = caviar.matrix
+        val valuesFile = subcommand.valuesFile().toScala
+        val idsFile = subcommand.idsFile().toScala
+        val outFile = subcommand.out().toScala
+        val idCol1 = subcommand.idCol1()
+        val idCol2 = subcommand.idCol2()
+        val valueCol = subcommand.valueCol()
+        Right(TsvMatrixCommand(valuesFile, idsFile, outFile, idCol1, idCol2, valueCol))
       case List(this.caviar, this.caviar.pToZ) =>
         val subcommand = caviar.pToZ
         val inFile = subcommand.in().toScala
