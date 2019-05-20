@@ -151,6 +151,8 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
     addSubcommand(pToZ)
   }
   addSubcommand(caviar)
+  val shell = new Subcommand("shell")
+  addSubcommand(shell)
   requireSubcommand()
   verify()
 
@@ -293,6 +295,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val idCol = subcommand.idCol()
         val pCol = subcommand.pCol()
         Right(CaviarPToZCommand(inFile, outFile, idCol, pCol))
+      case List(this.shell) => Right(ShellCommand)
       case _ => Left("Invalid combination of commands.")
     }
   }
