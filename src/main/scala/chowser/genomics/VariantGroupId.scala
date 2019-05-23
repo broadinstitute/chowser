@@ -47,18 +47,22 @@ object VariantGroupId {
     if(parts.size < 4 || parts.size > 5) {
       Left(s"""Unrecognized format of variant id \"$string\"""")
     } else {
-      Chromosome.parse(parts(0)) match {
-        case Left(message) => Left(message)
-        case Right(chromosome) =>
-          val posString = parts(1)
-          NumberParser.UnsignedIntParser.parseOpt(posString) match {
-            case None => Left(s"""Invalid format for position \"$posString\"""")
-            case Some(pos) =>
-              val ref = VariantId.adjustSequenceIfEmpty(parts(2))
-              val alts = parseAlts(parts(3))
-              Right(VariantGroupId(chromosome, pos, ref, alts))
-          }
-      }
+      parse(parts(0), parts(1), parts(2), parts(3))
+    }
+  }
+
+  def parse(chromString: String, posString: String, refString: String,
+            altString: String): Either[String, VariantGroupId] = {
+    Chromosome.parse(chromString) match {
+      case Left(message) => Left(message)
+      case Right(chromosome) =>
+        NumberParser.UnsignedIntParser.parseOpt(posString) match {
+          case None => Left(s"""Invalid format for position \"$posString\"""")
+          case Some(pos) =>
+            val ref = VariantId.adjustSequenceIfEmpty(refString)
+            val alts = parseAlts(altString)
+            Right(VariantGroupId(chromosome, pos, ref, alts))
+        }
     }
   }
 

@@ -25,3 +25,9 @@ case class FloatValue(value: Double) extends Value {
 
   override def asString: String = value.toString
 }
+
+case class StringValue(value: String) extends Value {
+  override def tpe: StringType.type = StringType
+
+  override def asString: String = "\"" + value.toString + "\""
+}

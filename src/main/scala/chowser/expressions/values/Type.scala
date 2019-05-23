@@ -20,6 +20,10 @@ object BoolType extends Type {
   override def asString: String = "Bool"
 }
 
+object StringType extends Type {
+  override def asString: String = "String"
+}
+
 object UnitType extends Type {
   override def asString: String = "Unit"
 }
