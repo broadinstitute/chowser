@@ -10,10 +10,10 @@ object VcfHeader {
     var lines: Seq[String] = Seq.empty
     if(lineIterator.hasNext) {
       var line = lineIterator.next()
-      lines += line
+      lines :+= line
       while(line.startsWith("##")) {
         line = lineIterator.next()
-        lines += line
+        lines :+= line
       }
       if(line.startsWith("#")) {
         Right(VcfHeader(lines))

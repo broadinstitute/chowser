@@ -9,12 +9,10 @@ case class VcfRecord(chrom: String, pos: String, id: String, ref: String, alt: S
 
   def withId(id: String): VcfRecord = copy(id = id)
 
-  def withCanonicalId: VcfRecord = {
+  def withCanonicalId: Either[String, VcfRecord] = {
     getCanonicalId match {
-      case Right(canonicalId) => withId(canonicalId.toString)
-      case Left(message) =>
-        println(message)
-        this
+      case Left(message) => Left(message)
+      case Right(canonicalId) => Right(withId(canonicalId.toString))
     }
   }
 

@@ -1,12 +1,13 @@
-package chowser.execute
+package chowser.vcf
 
 import better.files.File
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.VCFFileReader
+
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
-object VcfUtils {
+object HtsjdkUtils {
   def transformVcf(inFile: File, outFile: File)
                   (transformation: Iterator[VariantContext] => Iterator[VariantContext]): Unit = {
     val reader = new VCFFileReader(inFile.path, false)

@@ -1,21 +1,20 @@
 package chowser.execute
 
 import chowser.cmd.VariantsCanonicalizeVcfCommand
-import chowser.genomics.VariantGroupId
-import htsjdk.variant.variantcontext.VariantContextBuilder
+import chowser.vcf.VcfUtils
 
 object VariantsCanonicalizeVcfExecuter extends ChowserExecuter[VariantsCanonicalizeVcfCommand] {
 
   def execute(command: VariantsCanonicalizeVcfCommand): Result = {
     import command.{inFile, outFile}
-    VcfUtils.transformVcf(inFile, outFile) { variantContextIter =>
-      variantContextIter.flatMap { context =>
-        VariantGroupId.fromVariantContext(context) match {
-          case Right(newId) =>
-            Some(new VariantContextBuilder(context).id(newId.toString).make)
+    VcfUtils.transformVcf(inFile, outFile) { vcfRecordIter =>
+      vcfRecordIter.flatMap { vcfRecord =>
+        vcfRecord.withCanonicalId match {
           case Left(message) =>
             println(message)
-            None
+            Seq.empty
+          case Right(vcfRecordCanonicalized) =>
+            Seq(vcfRecordCanonicalized)
         }
       }
     }

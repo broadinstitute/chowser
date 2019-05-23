@@ -3,6 +3,7 @@ package chowser.execute
 import chowser.cmd.VariantsSelectVcfCommand
 import chowser.genomics.VariantGroupId
 import chowser.tsv.TsvUtils
+import chowser.vcf.HtsjdkUtils
 import htsjdk.variant.variantcontext.VariantContext
 
 object VariantsSelectVcfExecuter extends ChowserExecuter[VariantsSelectVcfCommand] {
@@ -18,7 +19,7 @@ object VariantsSelectVcfExecuter extends ChowserExecuter[VariantsSelectVcfComman
           false
       }
     }
-    VcfUtils.transformVcf(dataFile, outFile)(_.filter(variantContextFilter))
+    HtsjdkUtils.transformVcf(dataFile, outFile)(_.filter(variantContextFilter))
     Result(command, success = true)
   }
 
