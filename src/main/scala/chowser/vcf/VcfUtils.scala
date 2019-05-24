@@ -8,6 +8,7 @@ object VcfUtils {
       case Right(reader) =>
         val writer = VcfWriter(outFile, reader.header)
         transformer(reader.recordsIterator).foreach(writer.write)
+      case Left(message) => println(message)
     }
   }
 
