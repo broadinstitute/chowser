@@ -3,23 +3,22 @@ package chowser.execute
 import chowser.cmd.VariantsSelectVcfCommand
 import chowser.genomics.VariantGroupId
 import chowser.tsv.TsvUtils
-import chowser.vcf.HtsjdkUtils
-import htsjdk.variant.variantcontext.VariantContext
+import chowser.vcf.{VcfRecord, VcfUtils}
 
 object VariantsSelectVcfExecuter extends ChowserExecuter[VariantsSelectVcfCommand] {
 
   def execute(command: VariantsSelectVcfCommand): Result = {
     import command._
     val selectedIds = TsvUtils.loadVariantGroupIds(selectionFile, idColSelection)
-    val variantContextFilter: VariantContext => Boolean = { context =>
-      VariantGroupId.parse(context.getContig) match {
-        case Right(id) => selectedIds(id)
+    val vcfRecordFilter: VcfRecord => Boolean = { record =>
+      VariantGroupId.parse(record.id) match {
         case Left(message) =>
           println(message)
           false
+        case Right(id) => selectedIds(id)
       }
     }
-    HtsjdkUtils.transformVcf(dataFile, outFile)(_.filter(variantContextFilter))
+    VcfUtils.transformVcf(dataFile, outFile)(_.filter(vcfRecordFilter))
     Result(command, success = true)
   }
 
