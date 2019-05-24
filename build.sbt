@@ -6,13 +6,11 @@ val scalaTestV = "3.0.5"
 val betterFilesV = "3.8.0"
 val scallopV = "3.2.0"
 val htsjdkV = "2.19.0"
-val fastParseV = "2.1.0"
 
 lazy val mainDeps = Seq(
   "com.github.pathikrit" %% "better-files" % betterFilesV,
   "org.rogach" %% "scallop" % scallopV,
-  "com.github.samtools" % "htsjdk" % htsjdkV,
-  "com.lihaoyi" %% "fastparse" % fastParseV
+  "com.github.samtools" % "htsjdk" % htsjdkV
 )
 
 lazy val testDeps = Set(
