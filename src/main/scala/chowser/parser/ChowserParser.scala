@@ -8,6 +8,7 @@ object ChowserParser {
     if(string == "exit()") {
       Right(Exit)
     } else {
+
       Left("Don't know how to parse that yet.")
     }
   }
