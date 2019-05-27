@@ -16,4 +16,6 @@ object Token {
     def apply(string: String, pos: Int): Identifier = Identifier(string, pos, string.size)
   }
 
+  case class IntLiteral(string: String, value: Long, pos: Int, size: Int) extends Token
+
 }
