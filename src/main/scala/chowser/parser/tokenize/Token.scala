@@ -10,6 +10,8 @@ trait Token {
 
 object Token {
 
+  case class WhiteSpace(string: String, pos: Int, size: Int) extends Token
+
   case class Identifier(string: String, pos: Int, size: Int) extends Token
 
   object Identifier {
@@ -17,5 +19,7 @@ object Token {
   }
 
   case class IntLiteral(string: String, value: Long, pos: Int, size: Int) extends Token
+
+  case class FloatLiteral(string: String, value: Double, pos: Int, size: Int) extends Token
 
 }

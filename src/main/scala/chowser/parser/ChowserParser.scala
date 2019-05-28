@@ -1,6 +1,8 @@
 package chowser.parser
 
 import chowser.expressions.{Exit, Expression}
+import chowser.parser.tokenize.ScanState
+import chowser.parser.tokenize.Scanner._
 
 object ChowserParser {
 
@@ -8,8 +10,21 @@ object ChowserParser {
     if(string == "exit()") {
       Right(Exit)
     } else {
-
-      Left("Don't know how to parse that yet.")
+      var state = ScanState(string)
+      val scanner = CombinedScanner(WhiteSpaceScanner, IdentifierScanner, IntScanner, FloatScanner)
+      var count = 0
+      while(!state.isFinal) {
+        println(state.asString)
+        state = state.scanned(scanner)
+        count += 1
+      }
+      println(state.asString)
+      if(state.isComplete) {
+        println("Tokenization complete.")
+      } else if(state.hasFailed) {
+        println("Tokenization has failed.")
+      }
+      Left(state.errorOption.getOrElse("No error reported."))
     }
   }
 
