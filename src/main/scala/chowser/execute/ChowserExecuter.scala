@@ -15,6 +15,7 @@ object ChowserExecuter {
 
   def execute(command: ChowserCommand): Result[ChowserCommand] = {
     command match {
+      case tsvMatrixCommand: TsvMatrixCommand => TsvMatrixExecuter.execute(tsvMatrixCommand)
       case tsvRangeCommand: TsvRangeCommand => TsvRangeExecuter.execute(tsvRangeCommand)
       case tsvSliceCommand: TsvSliceCommand => TsvSliceExecuter.execute(tsvSliceCommand)
       case tsvSortCommand: TsvSortCommand => TsvSortExecuter.execute(tsvSortCommand)
