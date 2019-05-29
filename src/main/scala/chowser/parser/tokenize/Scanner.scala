@@ -1,7 +1,8 @@
 package chowser.parser.tokenize
 
+import java.util.regex.Pattern
+
 import chowser.parser.tokenize.Token.{IntLiteral, WhiteSpace}
-import chowser.util.NumberParser
 
 trait Scanner {
   def scan(state: ScanState): Scanner.Result
@@ -65,6 +66,23 @@ object Scanner {
     }
   }
 
+  object OperatorScanner extends Scanner {
+    val operatorChars: Set[Char] = "+-=*/\\&%$@^|!~".toSet
+    override def scan(state: ScanState): Result = {
+      val remainder = state.remainder
+      var size = 0
+      while(size < remainder.size && operatorChars(remainder.charAt(size))) {
+        size += 1
+      }
+      if(size > 0) {
+        val operatorString = remainder.substring(0, size)
+        Success(state.addToken(Token.Operator(operatorString, state.pos)))
+      } else {
+        Untriggered
+      }
+    }
+  }
+
   object IntScanner extends Scanner {
     def findFirstNonDigitOrEnd(string: String, startIndex: Int = 0): Int = {
       var index = startIndex
@@ -87,14 +105,6 @@ object Scanner {
         if (char0.isDigit) {
           val endIndex = findFirstNonDigitOrEnd(remainder)
           Success(state.addToken(makeIntLiteral(remainder, state.pos, endIndex)))
-        } else if ((char0 == '-' || char0 == '+') && remainder.size > 1) {
-          val char1 = remainder.charAt(1)
-          if (char1.isDigit) {
-            val endIndex = findFirstNonDigitOrEnd(remainder, 1)
-            Success(state.addToken(makeIntLiteral(remainder, state.pos, endIndex)))
-          } else {
-            Untriggered
-          }
         } else {
           Untriggered
         }
@@ -105,6 +115,10 @@ object Scanner {
   }
 
   object FloatScanner extends Scanner {
+    val regex: String = "[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"
+    val pattern: Pattern = Pattern.compile(regex)
+    def isFloatString(string: String): Boolean = pattern.matcher(string).matches()
+
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
       var size = 0
@@ -114,7 +128,7 @@ object Scanner {
       while (size < remainder.size && nFailures < nFailuresMax) {
         size += 1
         val substring = state.remainder.substring(0, size)
-        if (NumberParser.DoubleParser.isValid(substring)) {
+        if (isFloatString(substring)) {
           floatString = substring
           nFailures = 0
         } else {

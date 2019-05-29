@@ -18,6 +18,12 @@ object Token {
     def apply(string: String, pos: Int): Identifier = Identifier(string, pos, string.size)
   }
 
+  case class Operator(string: String, pos: Int, size: Int) extends Token
+
+  object Operator {
+    def apply(string: String, pos: Int): Operator = Operator(string, pos, string.size)
+  }
+
   case class IntLiteral(string: String, value: Long, pos: Int, size: Int) extends Token
 
   case class FloatLiteral(string: String, value: Double, pos: Int, size: Int) extends Token
