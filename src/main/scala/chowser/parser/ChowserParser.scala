@@ -11,7 +11,9 @@ object ChowserParser {
       Right(Exit)
     } else {
       var state = ScanState(string)
-      val scanner = CombinedScanner(WhiteSpaceScanner, IdentifierScanner, OperatorScanner, IntScanner, FloatScanner)
+      val scanner = CombinedScanner(
+        WhiteSpaceScanner, IdentifierScanner, OperatorScanner, IntScanner, FloatScanner, StringScanner
+      )
       var count = 0
       while(!state.isFinal) {
         println(state.asString)

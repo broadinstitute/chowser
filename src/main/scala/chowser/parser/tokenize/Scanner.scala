@@ -2,7 +2,7 @@ package chowser.parser.tokenize
 
 import java.util.regex.Pattern
 
-import chowser.parser.tokenize.Token.{IntLiteral, WhiteSpace}
+import chowser.parser.tokenize.Token.{IntLiteral, StringLiteral, WhiteSpace}
 
 trait Scanner {
   def scan(state: ScanState): Scanner.Result
@@ -151,8 +151,46 @@ object Scanner {
     val escapes: Map[Char, Char] =
       Map('b' -> '\b', 'n' -> '\n', 't' -> '\t', 'r' -> '\r', 'f' -> '\f', '"' -> '"', '\\' -> '\\')
 
+    val unclosedStringLiteralFailure = TriggeredButFailed("Unclosed String literal.")
+
     override def scan(state: ScanState): Result = {
-      ???
+      val remainder = state.remainder
+      if (remainder.charAt(0) == '"') {
+        var value = ""
+        var index = 1
+        var resultOpt: Option[Result] = None
+        while (resultOpt.isEmpty) {
+          if (index >= remainder.size) {
+            resultOpt = Some(unclosedStringLiteralFailure)
+          } else {
+            val char = remainder.charAt(index)
+            if (char == '"') {
+              val stringString = remainder.substring(0, index + 1)
+              resultOpt = Some(Success(state.addToken(StringLiteral(stringString, value, state.pos, index + 1))))
+            } else if (char == '\\') {
+              index += 1
+              if (index >= remainder.size) {
+                resultOpt = Some(unclosedStringLiteralFailure)
+              } else {
+                val charRaw2 = remainder.charAt(index)
+                escapes.get(charRaw2) match {
+                  case Some(char2) =>
+                    value += char2
+                    index += 1
+                  case None =>
+                    resultOpt = Some(TriggeredButFailed(s"""Unrecognized escape sequence "\\$charRaw2."""))
+                }
+              }
+            } else {
+              value += char
+              index += 1
+            }
+          }
+        }
+        resultOpt.get
+      } else {
+        Untriggered
+      }
     }
   }
 
