@@ -38,10 +38,10 @@ object Scanner {
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
       var size = 0
-      while(size < remainder.size && remainder.charAt(size).isWhitespace) {
+      while (size < remainder.size && remainder.charAt(size).isWhitespace) {
         size += 1
       }
-      if(size > 0) {
+      if (size > 0) {
         val wsString = remainder.substring(0, size)
         Success(state.addToken(WhiteSpace(wsString, state.pos, size)))
       } else {
@@ -68,13 +68,14 @@ object Scanner {
 
   object OperatorScanner extends Scanner {
     val operatorChars: Set[Char] = "+-=*/\\&%$@^|!~".toSet
+
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
       var size = 0
-      while(size < remainder.size && operatorChars(remainder.charAt(size))) {
+      while (size < remainder.size && operatorChars(remainder.charAt(size))) {
         size += 1
       }
-      if(size > 0) {
+      if (size > 0) {
         val operatorString = remainder.substring(0, size)
         Success(state.addToken(Token.Operator(operatorString, state.pos)))
       } else {
@@ -86,7 +87,7 @@ object Scanner {
   object IntScanner extends Scanner {
     def findFirstNonDigitOrEnd(string: String, startIndex: Int = 0): Int = {
       var index = startIndex
-      while (index < string.size  && string.charAt(index).isDigit) {
+      while (index < string.size && string.charAt(index).isDigit) {
         index += 1
       }
       index
@@ -117,6 +118,7 @@ object Scanner {
   object FloatScanner extends Scanner {
     val regex: String = "[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"
     val pattern: Pattern = Pattern.compile(regex)
+
     def isFloatString(string: String): Boolean = pattern.matcher(string).matches()
 
     override def scan(state: ScanState): Result = {
@@ -142,6 +144,15 @@ object Scanner {
       } else {
         Untriggered
       }
+    }
+  }
+
+  object StringScanner extends Scanner {
+    val escapes: Map[Char, Char] =
+      Map('b' -> '\b', 'n' -> '\n', 't' -> '\t', 'r' -> '\r', 'f' -> '\f', '"' -> '"', '\\' -> '\\')
+
+    override def scan(state: ScanState): Result = {
+      ???
     }
   }
 

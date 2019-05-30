@@ -28,4 +28,6 @@ object Token {
 
   case class FloatLiteral(string: String, value: Double, pos: Int, size: Int) extends Token
 
+  case class StringLiteral(string: String, value: String, pos: Int, size: Int) extends Token
+
 }
