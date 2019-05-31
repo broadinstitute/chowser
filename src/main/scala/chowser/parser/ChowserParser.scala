@@ -1,8 +1,7 @@
 package chowser.parser
 
 import chowser.expressions.{Exit, Expression}
-import chowser.parser.tokenize.ScanState
-import chowser.parser.tokenize.Scanner._
+import chowser.parser.tokenize.{ScanState, Scanner}
 
 object ChowserParser {
 
@@ -11,9 +10,7 @@ object ChowserParser {
       Right(Exit)
     } else {
       var state = ScanState(string)
-      val scanner = CombinedScanner(
-        WhiteSpaceScanner, IdentifierScanner, OperatorScanner, IntScanner, FloatScanner, StringScanner
-      )
+      val scanner = Scanner.chowserScanner
       var count = 0
       while(!state.isFinal) {
         println(state.asString)

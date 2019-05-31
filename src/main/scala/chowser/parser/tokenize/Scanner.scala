@@ -2,7 +2,7 @@ package chowser.parser.tokenize
 
 import java.util.regex.Pattern
 
-import chowser.parser.tokenize.Token.{IntLiteral, StringLiteral, WhiteSpace}
+import chowser.parser.tokenize.Token.{CloseBrace, CloseParenthesis, IntLiteral, OpenBrace, OpenParenthesis, StringLiteral, WhiteSpace}
 
 trait Scanner {
   def scan(state: ScanState): Scanner.Result
@@ -193,6 +193,33 @@ object Scanner {
       }
     }
   }
+
+  case class SingleCharacterScanner(char: Char, posToToken: Int => Token) extends Scanner {
+    override def scan(state: ScanState): Result = {
+      val remainder = state.remainder
+      if(remainder.size > 0) {
+        val char0 = remainder.charAt(0)
+        if(char0 == char) {
+          Success(state.addToken(posToToken(state.pos)))
+        } else {
+          Untriggered
+        }
+      } else {
+        Untriggered
+      }
+    }
+  }
+
+  object OpenParenthesisScanner extends SingleCharacterScanner('(', OpenParenthesis)
+  object CloseParenthesisScanner extends SingleCharacterScanner(')', CloseParenthesis)
+  object OpenBraceScanner extends SingleCharacterScanner('{', OpenBrace)
+  object CloseBraceScanner extends SingleCharacterScanner('}', CloseBrace)
+
+  val namedsScanner = CombinedScanner(IdentifierScanner, OperatorScanner)
+  val literalsScanner = CombinedScanner(IntScanner, FloatScanner, StringScanner)
+  val bracketsScanner =
+    CombinedScanner(OpenParenthesisScanner, CloseParenthesisScanner, OpenBraceScanner, CloseBraceScanner)
+  val chowserScanner = CombinedScanner(WhiteSpaceScanner, namedsScanner, literalsScanner, bracketsScanner)
 
   sealed trait Result
 
