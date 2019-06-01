@@ -1,13 +1,13 @@
 package chowser.parser
 
-import chowser.expressions.{Exit, Expression}
+import chowser.expressions.Expression
 import chowser.parser.tokenize.{ScanState, Scanner}
 
 object ChowserParser {
 
   def parseString(string: String): Either[String, Expression] = {
     if(string == "exit()") {
-      Right(Exit)
+      Right(Expression.Exit)
     } else {
       var state = ScanState(string)
       val scanner = Scanner.chowserScanner

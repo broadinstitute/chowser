@@ -2,7 +2,8 @@ package chowser.parser.tokenize
 
 import java.util.regex.Pattern
 
-import chowser.parser.tokenize.Token.{CloseBrace, CloseParenthesis, IntLiteral, OpenBrace, OpenParenthesis, StringLiteral, WhiteSpace}
+import chowser.expressions.Expression
+import chowser.parser.tokenize.Token._
 
 trait Scanner {
   def scan(state: ScanState): Scanner.Result
@@ -93,10 +94,11 @@ object Scanner {
       index
     }
 
-    def makeIntLiteral(string: String, pos: Int, size: Int): IntLiteral = {
+    def makeIntLiteral(string: String, pos: Int, size: Int): ExpressionToken = {
       val tokenString = string.substring(0, size)
       val value = tokenString.toLong
-      IntLiteral(tokenString, value, pos, size)
+      val expression = Expression.IntLiteral(value)
+      ExpressionToken(tokenString, expression, pos, size)
     }
 
     override def scan(state: ScanState): Result = {
@@ -140,7 +142,8 @@ object Scanner {
       size = floatString.size
       if (floatString.nonEmpty) {
         val value = floatString.toDouble
-        Success(state.addToken(Token.FloatLiteral(floatString, value, state.pos, size)))
+        val expression = Expression.FloatLiteral(value)
+        Success(state.addToken(ExpressionToken(floatString, expression, state.pos, size)))
       } else {
         Untriggered
       }
@@ -166,7 +169,9 @@ object Scanner {
             val char = remainder.charAt(index)
             if (char == '"') {
               val stringString = remainder.substring(0, index + 1)
-              resultOpt = Some(Success(state.addToken(StringLiteral(stringString, value, state.pos, index + 1))))
+              val expression = Expression.StringLiteral(value)
+              resultOpt =
+                Some(Success(state.addToken(ExpressionToken(stringString, expression, state.pos, index + 1))))
             } else if (char == '\\') {
               index += 1
               if (index >= remainder.size) {

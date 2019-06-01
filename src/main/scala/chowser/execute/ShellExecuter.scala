@@ -1,7 +1,7 @@
 package chowser.execute
 
 import chowser.cmd.ShellCommand
-import chowser.expressions.{Context, Exit, Failure, Issue, Success}
+import chowser.expressions.{Context, Failure, Issue, Success}
 import chowser.parser.ChowserParser
 
 object ShellExecuter extends ChowserExecuter[ShellCommand.type] {

@@ -1,5 +1,7 @@
 package chowser.parser.tokenize
 
+import chowser.expressions.Expression
+
 trait Token {
   def string: String
 
@@ -24,11 +26,7 @@ object Token {
     def apply(string: String, pos: Int): Operator = Operator(string, pos, string.size)
   }
 
-  case class IntLiteral(string: String, value: Long, pos: Int, size: Int) extends Token
-
-  case class FloatLiteral(string: String, value: Double, pos: Int, size: Int) extends Token
-
-  case class StringLiteral(string: String, value: String, pos: Int, size: Int) extends Token
+  case class ExpressionToken(string: String, expression: Expression, pos: Int, size: Int) extends Token
 
   trait SingleCharacterToken extends Token {
     def char: Char
