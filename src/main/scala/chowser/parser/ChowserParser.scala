@@ -24,7 +24,7 @@ object ChowserParser {
       } else if(state.hasFailed) {
         println("Tokenization has failed.")
       }
-      val reduceResult = Reducer.reduce(state.tokens, ChowserReduceRules.skipWhiteSpace)
+      val reduceResult = Reducer.reduce(state.tokens, ChowserReduceRules.all)
       if(reduceResult.errors.nonEmpty) {
         println("Error(s) during reduction")
         println(reduceResult.errors.mkString("\n"))

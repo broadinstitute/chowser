@@ -1,6 +1,7 @@
 package chowser.parser.treemaker
 
 import chowser.parser.tokenize.Token
+import chowser.parser.tokenize.Token.TermToken
 import chowser.parser.treemaker.Reducer.State.{LSeq, Lhs, RNil, RSeq, Rhs}
 
 object Reducer {
@@ -57,7 +58,11 @@ object Reducer {
       def asString: String = tokens.map(_.string).mkString("|")
     }
 
-    sealed trait Lhs extends HasTokens {
+    sealed trait TokenList extends HasTokens {
+      def hasNoTermHead: Boolean = true
+    }
+
+    sealed trait Lhs extends TokenList {
     }
 
     object LNil extends Lhs {
@@ -70,21 +75,27 @@ object Reducer {
       override def isEmpty: Boolean = false
 
       override def tokens: Seq[Token] = tail.tokens :+ head
+
+      override def hasNoTermHead: Boolean = !head.isInstanceOf[TermToken]
     }
 
-    sealed trait Rhs extends HasTokens {
+    sealed trait Rhs extends TokenList {
     }
 
     object RNil extends Rhs {
       override def isEmpty: Boolean = true
 
       override def tokens: Seq[Token] = Seq.empty
+
+      override def hasNoTermHead: Boolean = true
     }
 
     case class RSeq(head: Token, tail: Rhs) extends Rhs {
       override def isEmpty: Boolean = false
 
       override def tokens: Seq[Token] = head +: tail.tokens
+
+      override def hasNoTermHead: Boolean = !head.isInstanceOf[TermToken]
     }
 
     object Rhs {
