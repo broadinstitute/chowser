@@ -20,10 +20,10 @@ object Token {
     def apply(string: String, pos: Int): Identifier = Identifier(string, pos, string.size)
   }
 
-  case class Operator(string: String, pos: Int, size: Int) extends Token
+  case class OperatorToken(operator: Operator, pos: Int) extends Token {
+    override def string: String = operator.string
 
-  object Operator {
-    def apply(string: String, pos: Int): Operator = Operator(string, pos, string.size)
+    override def size: Int = string.size
   }
 
   case class ExpressionToken(string: String, expression: Expression, pos: Int, size: Int) extends Token
@@ -31,25 +31,21 @@ object Token {
   trait SingleCharacterToken extends Token {
     def char: Char
 
-    override def string = char.toString
+    override def string: String = char.toString
 
     override def size: Int = 1
   }
 
-  case class OpenParenthesis(pos: Int) extends SingleCharacterToken {
-    override def char: Char = '('
+  case class OpenBracketToken(openBracket: OpenBracket, pos: Int) extends SingleCharacterToken {
+    override def char: Char = openBracket.char
   }
 
-  case class CloseParenthesis(pos: Int) extends SingleCharacterToken {
-    override def char: Char = ')'
+  case class CloseBracketToken(closeBracket: CloseBracket, pos: Int) extends SingleCharacterToken {
+    override def char: Char = closeBracket.char
   }
 
-  case class OpenBrace(pos: Int) extends SingleCharacterToken {
-    override def char: Char = '{'
-  }
-
-  case class CloseBrace(pos: Int) extends SingleCharacterToken {
-    override def char: Char = '}'
+  case class SeparatorToken(separator: Separator, pos: Int) extends SingleCharacterToken {
+    override def char: Char = separator.char
   }
 
 }

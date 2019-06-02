@@ -68,17 +68,16 @@ object Scanner {
   }
 
   object OperatorScanner extends Scanner {
-    val operatorChars: Set[Char] = "+-=*/\\&%$@^|!~".toSet
-
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
       var size = 0
-      while (size < remainder.size && operatorChars(remainder.charAt(size))) {
+      while (size < remainder.size && Operator.chars(remainder.charAt(size))) {
         size += 1
       }
       if (size > 0) {
         val operatorString = remainder.substring(0, size)
-        Success(state.addToken(Token.Operator(operatorString, state.pos)))
+        val operator = Operator(operatorString)
+        Success(state.addToken(Token.OperatorToken(operator, state.pos)))
       } else {
         Untriggered
       }
@@ -199,12 +198,27 @@ object Scanner {
     }
   }
 
+  case class SingleCharacterItemScanner[T](charToItem: Map[Char, T], makeToken: (T, Int) => Token) extends Scanner {
+    override def scan(state: ScanState): Result = {
+      val remainder = state.remainder
+      if (remainder.size > 0) {
+        val char0 = remainder.charAt(0)
+        charToItem.get(char0) match {
+          case Some(item) => Success(state.addToken(makeToken(item, state.pos)))
+          case None => Untriggered
+        }
+      } else {
+        Untriggered
+      }
+    }
+  }
+
   case class SingleCharacterScanner(char: Char, posToToken: Int => Token) extends Scanner {
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
-      if(remainder.size > 0) {
+      if (remainder.size > 0) {
         val char0 = remainder.charAt(0)
-        if(char0 == char) {
+        if (char0 == char) {
           Success(state.addToken(posToToken(state.pos)))
         } else {
           Untriggered
@@ -215,16 +229,20 @@ object Scanner {
     }
   }
 
-  object OpenParenthesisScanner extends SingleCharacterScanner('(', OpenParenthesis)
-  object CloseParenthesisScanner extends SingleCharacterScanner(')', CloseParenthesis)
-  object OpenBraceScanner extends SingleCharacterScanner('{', OpenBrace)
-  object CloseBraceScanner extends SingleCharacterScanner('}', CloseBrace)
+  object OpenBracketScanner
+    extends SingleCharacterItemScanner[OpenBracket](OpenBracket.charToOpenBracket, OpenBracketToken)
+
+  object CloseBracketScanner
+    extends SingleCharacterItemScanner[CloseBracket](CloseBracket.charToCloseBracket, CloseBracketToken)
+
+  object SeparatorScanner extends SingleCharacterItemScanner[Separator](Separator.charToSeparator, SeparatorToken)
 
   val namedsScanner = CombinedScanner(IdentifierScanner, OperatorScanner)
   val literalsScanner = CombinedScanner(IntScanner, FloatScanner, StringScanner)
-  val bracketsScanner =
-    CombinedScanner(OpenParenthesisScanner, CloseParenthesisScanner, OpenBraceScanner, CloseBraceScanner)
-  val chowserScanner = CombinedScanner(WhiteSpaceScanner, namedsScanner, literalsScanner, bracketsScanner)
+  val chowserScanner =
+    CombinedScanner(
+      WhiteSpaceScanner, namedsScanner, literalsScanner, OpenBracketScanner, CloseBracketScanner, SeparatorScanner
+    )
 
   sealed trait Result
 
