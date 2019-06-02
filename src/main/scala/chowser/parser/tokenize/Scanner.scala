@@ -54,7 +54,7 @@ object Scanner {
   object IdentifierScanner extends Scanner {
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
-      if (remainder.size > 0 && Character.isJavaIdentifierStart(remainder.charAt(0))) {
+      if (remainder.nonEmpty && Character.isJavaIdentifierStart(remainder.charAt(0))) {
         var size = 1
         while (size < remainder.size && Character.isJavaIdentifierPart(remainder.charAt(size))) {
           size += 1
@@ -102,7 +102,7 @@ object Scanner {
 
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
-      if (remainder.size > 0) {
+      if (remainder.nonEmpty) {
         val char0 = remainder.charAt(0)
         if (char0.isDigit) {
           val endIndex = findFirstNonDigitOrEnd(remainder)
@@ -201,27 +201,11 @@ object Scanner {
   case class SingleCharacterItemScanner[T](charToItem: Map[Char, T], makeToken: (T, Int) => Token) extends Scanner {
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
-      if (remainder.size > 0) {
+      if (remainder.nonEmpty) {
         val char0 = remainder.charAt(0)
         charToItem.get(char0) match {
           case Some(item) => Success(state.addToken(makeToken(item, state.pos)))
           case None => Untriggered
-        }
-      } else {
-        Untriggered
-      }
-    }
-  }
-
-  case class SingleCharacterScanner(char: Char, posToToken: Int => Token) extends Scanner {
-    override def scan(state: ScanState): Result = {
-      val remainder = state.remainder
-      if (remainder.size > 0) {
-        val char0 = remainder.charAt(0)
-        if (char0 == char) {
-          Success(state.addToken(posToToken(state.pos)))
-        } else {
-          Untriggered
         }
       } else {
         Untriggered
