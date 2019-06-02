@@ -1,61 +1,105 @@
 package chowser.parser.treemaker
 
 import chowser.parser.tokenize.Token
+import chowser.parser.treemaker.Reducer.State.{LSeq, Lhs, RNil, RSeq, Rhs}
 
 object Reducer {
 
-  def reduce(tokens: Seq[Token], rules: Seq[Rule]): Result = {
+  def reduce(tokens: Seq[Token], rule: Rule): Result = {
     var state: State = State(tokens)
     var errors: Seq[String] = Seq.empty
     var keepGoing: Boolean = true
-    while(keepGoing) {
-      var rulesIter: Iterator[Rule] = rules.iterator
-      while(rulesIter.hasNext) {
-        val rule = rulesIter.next()
-        rule.reduce(state) match {
-          case Rule.Untriggered => ()
-          case Rule.Error(message) => errors :+= message
-          case Rule.Success(stateNew) =>
-            state = stateNew
-            rulesIter = rules.iterator
-        }
+    while (keepGoing) {
+      rule.lift(state) match {
+        case Some(Left(error)) =>
+          keepGoing = false
+          errors :+= error
+        case Some(Right(reduction)) =>
+          state = state.reduce(reduction)
+        case None => ()
       }
-      if(state.isExhausted) {
-        keepGoing = false
-      } else {
-        state = state.shift
+      state.shift match {
+        case Some(stateNew) => state = stateNew
+        case None => keepGoing = false
+      }
+      println(state.asString)
+    }
+    Result(state.lhs.tokens, errors)
+  }
+
+  case class State(lhs: Lhs, rhs: Rhs) extends State.HasTokens {
+    override def asString: String = lhs.asString + "||" + rhs.asString
+
+    def reduce(lhsNew: Lhs): State = copy(lhs = lhsNew)
+
+    def isExhausted: Boolean = rhs.isEmpty
+
+    def shift: Option[State] = {
+      rhs match {
+        case RNil => None
+        case RSeq(head, tail) => Some(State(LSeq(lhs, head), tail))
       }
     }
-    Result(state.lhs, errors)
-  }
 
-  trait Reducible[+R <: Reducible[R]] {
-    def lhs: Seq[Token]
-    def rhs: Seq[Token]
-    def reduce(nConsume: Int, replacements: Seq[Token]): R
-  }
+    override def isEmpty: Boolean = lhs.isEmpty && rhs.isEmpty
 
-  case class State(lhs: Seq[Token], rhs: Seq[Token]) extends Reducible[State] {
-    def isExhausted: Boolean = rhs.isEmpty
-    def reduce(nConsume: Int, replacements: Seq[Token]): State = copy(lhs = lhs.dropRight(nConsume) ++ replacements)
-    def shift: State = State(lhs :+ rhs.head, rhs.tail)
+    override def tokens: Seq[Token] = lhs.tokens ++ rhs.tokens
   }
 
   object State {
-    def apply(tokens: Seq[Token]): State = State(Seq.empty, tokens)
+    def apply(tokens: Seq[Token]): State = State(LNil, Rhs(tokens))
+
+    sealed trait HasTokens {
+      def isEmpty: Boolean
+
+      def tokens: Seq[Token]
+
+      def asString: String = tokens.map(_.string).mkString("|")
+    }
+
+    sealed trait Lhs extends HasTokens {
+    }
+
+    object LNil extends Lhs {
+      override def isEmpty: Boolean = true
+
+      override def tokens: Seq[Token] = Seq.empty
+    }
+
+    case class LSeq(tail: Lhs, head: Token) extends Lhs {
+      override def isEmpty: Boolean = false
+
+      override def tokens: Seq[Token] = tail.tokens :+ head
+    }
+
+    sealed trait Rhs extends HasTokens {
+    }
+
+    object RNil extends Rhs {
+      override def isEmpty: Boolean = true
+
+      override def tokens: Seq[Token] = Seq.empty
+    }
+
+    case class RSeq(head: Token, tail: Rhs) extends Rhs {
+      override def isEmpty: Boolean = false
+
+      override def tokens: Seq[Token] = head +: tail.tokens
+    }
+
+    object Rhs {
+      def apply(tokens: Seq[Token]): Rhs = {
+        tokens.headOption match {
+          case Some(head) => RSeq(head, Rhs(tokens.tail))
+          case None => RNil
+        }
+      }
+    }
+
   }
 
-  trait Rule {
-    def reduce[R <: Reducible[R]](reducible: R): Rule.Result[R]
-  }
-  object Rule {
-    sealed trait Result[+R <: Reducible[R]]
-    object Untriggered extends Result[Nothing]
-    case class Error(message: String) extends Result[Nothing]
-    case class Success[R <: Reducible[R]](reducible: R) extends Result[R]
-  }
+  type Rule = PartialFunction[State, Either[String, Lhs]]
 
   case class Result(tokens: Seq[Token], errors: Seq[String])
-
 
 }

@@ -2,6 +2,7 @@ package chowser.parser
 
 import chowser.expressions.Expression
 import chowser.parser.tokenize.{ScanState, Scanner}
+import chowser.parser.treemaker.{ChowserReduceRules, Reducer}
 
 object ChowserParser {
 
@@ -23,7 +24,13 @@ object ChowserParser {
       } else if(state.hasFailed) {
         println("Tokenization has failed.")
       }
-      Left(state.errorOption.getOrElse("No error reported."))
+      val reduceResult = Reducer.reduce(state.tokens, ChowserReduceRules.skipWhiteSpace)
+      if(reduceResult.errors.nonEmpty) {
+        println("Error(s) during reduction")
+        println(reduceResult.errors.mkString("\n"))
+      }
+      println(reduceResult.tokens.map(_.string).mkString("|"))
+      Left("Work in progress")
     }
   }
 
