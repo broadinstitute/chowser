@@ -14,12 +14,14 @@ object Token {
 
   sealed trait TermToken extends Token
 
-  case class WhiteSpace(string: String, pos: Int, size: Int) extends Token
+  case class WhiteSpaceToken(string: String, pos: Int, size: Int) extends Token
 
-  case class Identifier(string: String, pos: Int, size: Int) extends TermToken
+  sealed trait CallableToken extends TermToken
 
-  object Identifier {
-    def apply(string: String, pos: Int): Identifier = Identifier(string, pos, string.size)
+  case class IdentifierToken(string: String, pos: Int, size: Int) extends CallableToken
+
+  object IdentifierToken {
+    def apply(string: String, pos: Int): IdentifierToken = IdentifierToken(string, pos, string.size)
   }
 
   case class OperatorToken(operator: Operator, pos: Int) extends Token {
@@ -73,6 +75,54 @@ object Token {
   case class BracketedTermToken(open: OpenBracketToken, term: TermToken, close: CloseBracketToken)
     extends TermToken with CompositeToken {
     override def children: Seq[Token] = Seq(open, term, close)
+  }
+
+  case class MemberSelectToken(term: TermToken, dot: SeparatorToken, member: IdentifierToken)
+    extends CallableToken with CompositeToken {
+    override def children: Seq[Token] = Seq(term, dot, member)
+  }
+
+  sealed trait ArgsToken extends Token {
+  }
+
+  object ArgsToken {
+    def forSingleArg(term: TermToken): NonZeroArgsToken = NonZeroArgsToken(term, Seq.empty)
+  }
+
+  case class ZeroArgsToken(pos: Int) extends ArgsToken {
+    override def string: String = ""
+
+    override def size: Int = 0
+  }
+
+  case class NonZeroArgsToken(head: TermToken, tail: Seq[(SeparatorToken, TermToken)])
+    extends ArgsToken with CompositeToken {
+    override def children: Seq[Token] = head +: tail.flatMap { case (separator, term) => Seq(separator, term) }
+
+    def plus(separator: SeparatorToken, term: TermToken): NonZeroArgsToken =
+      NonZeroArgsToken(head, tail :+ (separator, term))
+  }
+
+  case class CallPartialCloseableToken(callable: CallableToken, open: OpenBracketToken, args: ArgsToken)
+    extends CompositeToken {
+    override def children: Seq[Token] = Seq(callable, open, args)
+
+    def closedWith(close: CloseBracketToken): CallToken = CallToken(callable, open, args, close)
+  }
+
+  object CallPartialCloseableToken {
+    def apply(callable: CallableToken, open: OpenBracketToken): CallPartialCloseableToken =
+      CallPartialCloseableToken(callable, open, ZeroArgsToken(open.pos + 1))
+  }
+
+  case class CallPartialTrailingCommaToken(callable: CallableToken, open: OpenBracketToken, args: ArgsToken,
+                                           comma: SeparatorToken) extends CompositeToken {
+    override def children: Seq[Token] = Seq(callable, open, args, comma)
+  }
+
+  case class CallToken(callable: CallableToken, open: OpenBracketToken, args: ArgsToken, close: CloseBracketToken)
+    extends TermToken with CompositeToken {
+    override def children: Seq[Token] = Seq(callable, open, args, close)
   }
 
 }

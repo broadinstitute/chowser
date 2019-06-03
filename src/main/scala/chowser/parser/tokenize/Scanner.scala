@@ -44,7 +44,7 @@ object Scanner {
       }
       if (size > 0) {
         val wsString = remainder.substring(0, size)
-        Success(state.addToken(WhiteSpace(wsString, state.pos, size)))
+        Success(state.addToken(WhiteSpaceToken(wsString, state.pos, size)))
       } else {
         Untriggered
       }
@@ -59,7 +59,7 @@ object Scanner {
         while (size < remainder.size && Character.isJavaIdentifierPart(remainder.charAt(size))) {
           size += 1
         }
-        val token = Token.Identifier(remainder.substring(0, size), state.pos)
+        val token = Token.IdentifierToken(remainder.substring(0, size), state.pos)
         Success(state.addToken(token))
       } else {
         Untriggered
