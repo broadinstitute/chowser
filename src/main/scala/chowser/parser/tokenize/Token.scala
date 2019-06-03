@@ -52,20 +52,27 @@ object Token {
     override def char: Char = separator.char
   }
 
-  case class UnaryOpToken(op: OperatorToken, term: TermToken) extends TermToken {
-    override def string: String = op.string + term.string
+  trait CompositeToken extends Token {
+    def children: Seq[Token]
 
-    override def pos: Int = op.pos
+    override def string: String = children.map(_.string).mkString("")
 
-    override def size: Int = op.size + term.size
+    override def size: Int = children.map(_.size).sum
+
+    override def pos: Int = children.head.pos
   }
 
-  case class BinaryOpToken(lhs: TermToken, op: OperatorToken, rhs: TermToken) extends TermToken {
-    override def string: String = lhs.string + op.string + rhs.string
+  case class UnaryOpToken(op: OperatorToken, term: TermToken) extends TermToken with CompositeToken {
+    override def children: Seq[Token] = Seq(op, term)
+  }
 
-    override def pos: Int = lhs.pos
+  case class BinaryOpToken(lhs: TermToken, op: OperatorToken, rhs: TermToken) extends TermToken with CompositeToken {
+    override def children: Seq[Token] = Seq(lhs, op, rhs)
+  }
 
-    override def size: Int = lhs.size + op.size + rhs.size
+  case class BracketedTermToken(open: OpenBracketToken, term: TermToken, close: CloseBracketToken)
+    extends TermToken with CompositeToken {
+    override def children: Seq[Token] = Seq(open, term, close)
   }
 
 }

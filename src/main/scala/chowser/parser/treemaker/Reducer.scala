@@ -1,8 +1,7 @@
 package chowser.parser.treemaker
 
 import chowser.parser.tokenize.Token
-import chowser.parser.tokenize.Token.TermToken
-import chowser.parser.treemaker.Reducer.State.{LSeq, Lhs, RNil, RSeq, Rhs}
+import chowser.parser.treemaker.Reducer.State._
 
 object Reducer {
 
