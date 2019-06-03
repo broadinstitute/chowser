@@ -17,11 +17,11 @@ object Reducer {
           errors :+= error
         case Some(Right(reduction)) =>
           state = state.reduce(reduction)
-        case None => ()
-      }
-      state.shift match {
-        case Some(stateNew) => state = stateNew
-        case None => keepGoing = false
+        case None =>
+          state.shift match {
+            case Some(stateNew) => state = stateNew
+            case None => keepGoing = false
+          }
       }
       println(state.asString)
     }
@@ -59,43 +59,48 @@ object Reducer {
     }
 
     sealed trait TokenList extends HasTokens {
-      def hasNoTermHead: Boolean = true
+      def hasHeadWith(predicate: Token => Boolean): Boolean
+    }
+
+    sealed trait EmptyTokenList extends TokenList {
+      override final def hasHeadWith(predicate: Token => Boolean): Boolean = false
+    }
+
+    sealed trait NonEmptyTokenList extends TokenList {
+      def head: Token
+
+      override final def hasHeadWith(predicate: Token => Boolean): Boolean = predicate(head)
     }
 
     sealed trait Lhs extends TokenList {
     }
 
-    object LNil extends Lhs {
+    object LNil extends Lhs with EmptyTokenList {
       override def isEmpty: Boolean = true
 
       override def tokens: Seq[Token] = Seq.empty
+
     }
 
-    case class LSeq(tail: Lhs, head: Token) extends Lhs {
+    case class LSeq(tail: Lhs, head: Token) extends Lhs with NonEmptyTokenList {
       override def isEmpty: Boolean = false
 
       override def tokens: Seq[Token] = tail.tokens :+ head
-
-      override def hasNoTermHead: Boolean = !head.isInstanceOf[TermToken]
     }
 
     sealed trait Rhs extends TokenList {
     }
 
-    object RNil extends Rhs {
+    object RNil extends Rhs with EmptyTokenList {
       override def isEmpty: Boolean = true
 
       override def tokens: Seq[Token] = Seq.empty
-
-      override def hasNoTermHead: Boolean = true
     }
 
-    case class RSeq(head: Token, tail: Rhs) extends Rhs {
+    case class RSeq(head: Token, tail: Rhs) extends Rhs with NonEmptyTokenList {
       override def isEmpty: Boolean = false
 
       override def tokens: Seq[Token] = head +: tail.tokens
-
-      override def hasNoTermHead: Boolean = !head.isInstanceOf[TermToken]
     }
 
     object Rhs {

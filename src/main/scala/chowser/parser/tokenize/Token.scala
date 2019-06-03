@@ -11,6 +11,7 @@ sealed trait Token {
 }
 
 object Token {
+
   sealed trait TermToken extends Token
 
   case class WhiteSpace(string: String, pos: Int, size: Int) extends Token
@@ -25,6 +26,8 @@ object Token {
     override def string: String = operator.string
 
     override def size: Int = string.size
+
+    def precedence: Int = operator.precedence
   }
 
   case class ExpressionToken(string: String, expression: Expression, pos: Int, size: Int) extends TermToken
