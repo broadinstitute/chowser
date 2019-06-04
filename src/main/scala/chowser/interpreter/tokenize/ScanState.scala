@@ -1,6 +1,6 @@
-package chowser.parser.tokenize
+package chowser.interpreter.tokenize
 
-import chowser.parser.tokenize.Scanner.{Success, TriggeredButFailed, Untriggered}
+import chowser.interpreter.tokenize.Scanner.{Success, TriggeredButFailed, Untriggered}
 
 case class ScanState(tokens: Seq[Token], pos: Int, string: String, remainder: String, errorOption: Option[String]) {
 

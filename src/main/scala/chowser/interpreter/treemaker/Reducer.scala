@@ -1,7 +1,7 @@
-package chowser.parser.treemaker
+package chowser.interpreter.treemaker
 
-import chowser.parser.tokenize.Token
-import chowser.parser.treemaker.Reducer.State._
+import chowser.interpreter.tokenize.Token
+import chowser.interpreter.treemaker.Reducer.State._
 
 object Reducer {
 

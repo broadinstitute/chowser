@@ -1,12 +1,12 @@
-package chowser.parser
+package chowser.interpreter
 
 import chowser.expressions.Expression
-import chowser.parser.tokenize.{ScanState, Scanner}
-import chowser.parser.treemaker.{ChowserReduceRules, Reducer}
+import chowser.interpreter.tokenize.{ScanState, Scanner}
+import chowser.interpreter.treemaker.{ChowserReduceRules, Reducer}
 
-object ChowserParser {
+object ChowserInterpreter {
 
-  def parseString(string: String): Either[String, Expression] = {
+  def interpretString(string: String): Either[String, Expression] = {
     if(string == "exit()") {
       Right(Expression.Exit)
     } else {
@@ -14,7 +14,6 @@ object ChowserParser {
       val scanner = Scanner.chowserScanner
       var count = 0
       while(!state.isFinal) {
-        println(state.asString)
         state = state.scanned(scanner)
         count += 1
       }
@@ -31,7 +30,16 @@ object ChowserParser {
       }
       println(reduceResult.tokens.map(_.string).mkString("|"))
       println(reduceResult)
-      Left("Work in progress")
+      if(reduceResult.errors.nonEmpty) {
+        Left("Could not parse\n" + reduceResult.errors.mkString("\n"))
+      } else {
+        if(reduceResult.tokens.size != 1) {
+          Left("Couldn't parse. Not sure why.")
+        } else {
+          val token = reduceResult.tokens.head
+          Left("Work in progress")
+        }
+      }
     }
   }
 

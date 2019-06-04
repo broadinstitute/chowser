@@ -1,9 +1,9 @@
-package chowser.parser.treemaker
+package chowser.interpreter.treemaker
 
-import chowser.parser.tokenize.Token
-import chowser.parser.tokenize.Token._
-import chowser.parser.treemaker.Reducer.State.{LSeq, RSeq}
-import chowser.parser.treemaker.Reducer.{Rule, State}
+import chowser.interpreter.tokenize.Token
+import chowser.interpreter.tokenize.Token._
+import chowser.interpreter.treemaker.Reducer.State.LSeq
+import chowser.interpreter.treemaker.Reducer.{Rule, State}
 
 object ChowserReduceRules {
 

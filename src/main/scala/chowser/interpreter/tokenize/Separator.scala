@@ -1,4 +1,4 @@
-package chowser.parser.tokenize
+package chowser.interpreter.tokenize
 
 case class Separator(char: Char) {
 

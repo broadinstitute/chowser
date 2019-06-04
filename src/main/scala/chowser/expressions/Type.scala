@@ -1,4 +1,6 @@
-package chowser.expressions.values
+package chowser.expressions
+
+import chowser.expressions.values.Value
 
 trait Type extends Value {
   override def tpe: TypeType.type = TypeType

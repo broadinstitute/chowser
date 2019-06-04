@@ -1,5 +1,7 @@
 package chowser.expressions.values
 
+import chowser.expressions.{FloatType, IntType, StringType, Type, UnitType}
+
 trait Value {
   def tpe: Type
   def asString: String

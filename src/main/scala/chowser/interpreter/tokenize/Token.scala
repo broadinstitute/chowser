@@ -1,4 +1,4 @@
-package chowser.parser.tokenize
+package chowser.interpreter.tokenize
 
 import chowser.expressions.Expression
 

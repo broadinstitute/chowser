@@ -1,9 +1,9 @@
-package chowser.parser.tokenize
+package chowser.interpreter.tokenize
 
 import java.util.regex.Pattern
 
 import chowser.expressions.Expression
-import chowser.parser.tokenize.Token._
+import chowser.interpreter.tokenize.Token._
 
 trait Scanner {
   def scan(state: ScanState): Scanner.Result

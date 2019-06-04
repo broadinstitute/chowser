@@ -1,4 +1,4 @@
-package chowser.parser.tokenize
+package chowser.interpreter.tokenize
 
 case class Brackets(charOpen: Char, charClose: Char) {
   def openBracket: OpenBracket = OpenBracket(this)
