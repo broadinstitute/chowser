@@ -42,17 +42,78 @@ object Token {
     override def size: Int = 1
   }
 
-  case class OpenBracketToken(openBracket: OpenBracket, pos: Int) extends SingleCharacterToken {
+  sealed trait OpenBracketToken extends SingleCharacterToken {
+    def open: OpenBracket
+
+    override def char: Char = open.char
+  }
+
+  case class OpenParenToken(pos: Int) extends OpenBracketToken {
+    override def open: OpenBracket = Brackets.Parentheses.openBracket
+  }
+
+  case class OpenBraceToken(pos: Int) extends OpenBracketToken {
+    override def open: OpenBracket = Brackets.Braces.openBracket
+  }
+
+  sealed trait CloseBracketToken extends SingleCharacterToken {
+    def close: CloseBracket
+
+    override def char: Char = close.char
+  }
+
+  case class CloseParenToken(pos: Int) extends CloseBracketToken {
+    override def close: CloseBracket = Brackets.Parentheses.closeBracket
+  }
+
+  case class CloseBraceToken(pos: Int) extends CloseBracketToken {
+    override def close: CloseBracket = Brackets.Braces.closeBracket
+  }
+
+  case class OpenBracketTokenOld(openBracket: OpenBracket, pos: Int) extends SingleCharacterToken {
     override def char: Char = openBracket.char
   }
 
-  case class CloseBracketToken(closeBracket: CloseBracket, pos: Int) extends SingleCharacterToken {
+  case class CloseBracketTokenOld(closeBracket: CloseBracket, pos: Int) extends SingleCharacterToken {
     override def char: Char = closeBracket.char
   }
 
-  case class SeparatorToken(separator: Separator, pos: Int) extends SingleCharacterToken {
+  case class DefinitionToken(pos: Int) extends Token {
+    override def string: String = ":="
+
+    override def size: Int = 2
+  }
+
+  case class CommaToken(pos: Int) extends SingleCharacterToken {
+    override def char: Char = ','
+  }
+
+  case class ColonToken(pos: Int) extends SingleCharacterToken {
+    override def char: Char = ':'
+  }
+
+  case class SemicolonToken(pos: Int) extends SingleCharacterToken {
+    override def char: Char = ';'
+  }
+
+  case class DotToken(pos: Int) extends SingleCharacterToken {
+    override def char: Char = '.'
+  }
+
+  case class SeparatorTokenOld(separator: Separator, pos: Int) extends SingleCharacterToken {
     override def char: Char = separator.char
   }
+
+  val singleCharacterTokenGenerators: Map[Char, Int => SingleCharacterToken] = Map(
+    '(' -> OpenParenToken,
+    '{' -> OpenBraceToken,
+    ')' -> CloseParenToken,
+    '}' -> CloseBraceToken,
+    ',' -> CommaToken,
+    ':' -> ColonToken,
+    ';' -> SemicolonToken,
+    '.' -> DotToken
+  )
 
   trait CompositeToken extends Token {
     def children: Seq[Token]
@@ -77,52 +138,47 @@ object Token {
     override def children: Seq[Token] = Seq(open, term, close)
   }
 
-  case class MemberSelectToken(term: TermToken, dot: SeparatorToken, member: IdentifierToken)
+  case class MemberSelectToken(term: TermToken, dot: DotToken, member: IdentifierToken)
     extends CallableToken with CompositeToken {
     override def children: Seq[Token] = Seq(term, dot, member)
   }
 
-  sealed trait ArgsToken extends Token {
+  sealed trait TupleToken extends TermToken
+
+  case class UnitToken(open: OpenParenToken, close: CloseParenToken) extends TupleToken with CompositeToken {
+    override def children: Seq[Token] = Seq(open, close)
   }
 
-  object ArgsToken {
-    def forSingleArg(term: TermToken): NonZeroArgsToken = NonZeroArgsToken(term, Seq.empty)
+  case class OneTupleToken(open: OpenParenToken, term: TermToken, close: CloseParenToken)
+    extends TupleToken with CompositeToken {
+    override def children: Seq[Token] = Seq(open, term, close)
   }
 
-  case class ZeroArgsToken(pos: Int) extends ArgsToken {
-    override def string: String = ""
-
-    override def size: Int = 0
-  }
-
-  case class NonZeroArgsToken(head: TermToken, tail: Seq[(SeparatorToken, TermToken)])
-    extends ArgsToken with CompositeToken {
-    override def children: Seq[Token] = head +: tail.flatMap { case (separator, term) => Seq(separator, term) }
-
-    def plus(separator: SeparatorToken, term: TermToken): NonZeroArgsToken =
-      NonZeroArgsToken(head, tail :+ (separator, term))
-  }
-
-  case class CallPartialCloseableToken(callable: CallableToken, open: OpenBracketToken, args: ArgsToken)
+  case class MultiTupleUnfinishedToken(open: OpenParenToken, args: Seq[(TermToken, CommaToken)])
     extends CompositeToken {
-    override def children: Seq[Token] = Seq(callable, open, args)
+    override def children: Seq[Token] = open +: args.flatMap { case (term, comma) => Seq(term, comma) }
 
-    def closedWith(close: CloseBracketToken): CallToken = CallToken(callable, open, args, close)
+    def extendBy(term: TermToken, comma: CommaToken): MultiTupleUnfinishedToken =
+      MultiTupleUnfinishedToken(open, args :+ (term, comma))
+
+    def closeBy(term: TermToken, close: CloseParenToken): MultiTupleToken =
+      MultiTupleToken(open, args, term, close)
   }
 
-  object CallPartialCloseableToken {
-    def apply(callable: CallableToken, open: OpenBracketToken): CallPartialCloseableToken =
-      CallPartialCloseableToken(callable, open, ZeroArgsToken(open.pos + 1))
+  object MultiTupleUnfinishedToken {
+    def apply(open: OpenParenToken, term: TermToken, comma: CommaToken): MultiTupleUnfinishedToken =
+      MultiTupleUnfinishedToken(open, Seq((term, comma)))
   }
 
-  case class CallPartialTrailingCommaToken(callable: CallableToken, open: OpenBracketToken, args: ArgsToken,
-                                           comma: SeparatorToken) extends CompositeToken {
-    override def children: Seq[Token] = Seq(callable, open, args, comma)
+  case class MultiTupleToken(open: OpenParenToken, argsFirst: Seq[(TermToken, CommaToken)], argLast: TermToken,
+                             close: CloseParenToken) extends TupleToken with CompositeToken {
+    override def children: Seq[Token] =
+      open +: argsFirst.flatMap { case (term, comma) => Seq(term, comma) } :+ argLast :+ close
   }
 
-  case class CallToken(callable: CallableToken, open: OpenBracketToken, args: ArgsToken, close: CloseBracketToken)
+  case class CallToken(callable: CallableToken, tuple: TupleToken)
     extends TermToken with CompositeToken {
-    override def children: Seq[Token] = Seq(callable, open, args, close)
+    override def children: Seq[Token] = Seq(callable, tuple)
   }
 
 }

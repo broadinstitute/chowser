@@ -30,6 +30,7 @@ object ChowserParser {
         println(reduceResult.errors.mkString("\n"))
       }
       println(reduceResult.tokens.map(_.string).mkString("|"))
+      println(reduceResult)
       Left("Work in progress")
     }
   }

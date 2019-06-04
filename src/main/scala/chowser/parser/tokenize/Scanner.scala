@@ -198,14 +198,28 @@ object Scanner {
     }
   }
 
-  case class SingleCharacterItemScanner[T](charToItem: Map[Char, T], makeToken: (T, Int) => Token) extends Scanner {
+  object DefinitionScanner extends Scanner {
     override def scan(state: ScanState): Result = {
       val remainder = state.remainder
-      if (remainder.nonEmpty) {
+      if(remainder.startsWith(":=")) {
+        Success(state.addToken(DefinitionToken(state.pos)))
+      } else {
+        Untriggered
+      }
+    }
+  }
+
+  object SingleCharacterScanner extends Scanner {
+    override def scan(state: ScanState): Result = {
+      val remainder = state.remainder
+      if(remainder.nonEmpty) {
         val char0 = remainder.charAt(0)
-        charToItem.get(char0) match {
-          case Some(item) => Success(state.addToken(makeToken(item, state.pos)))
-          case None => Untriggered
+        Token.singleCharacterTokenGenerators.get(char0) match {
+          case Some(tokenGenerator) =>
+            val token = tokenGenerator(state.pos)
+            Success(state.addToken(token))
+          case None =>
+            Untriggered
         }
       } else {
         Untriggered
@@ -213,19 +227,12 @@ object Scanner {
     }
   }
 
-  object OpenBracketScanner
-    extends SingleCharacterItemScanner[OpenBracket](OpenBracket.charToOpenBracket, OpenBracketToken)
-
-  object CloseBracketScanner
-    extends SingleCharacterItemScanner[CloseBracket](CloseBracket.charToCloseBracket, CloseBracketToken)
-
-  object SeparatorScanner extends SingleCharacterItemScanner[Separator](Separator.charToSeparator, SeparatorToken)
-
   val namedsScanner = CombinedScanner(IdentifierScanner, OperatorScanner)
   val literalsScanner = CombinedScanner(IntScanner, FloatScanner, StringScanner)
+  val miscScanner = CombinedScanner(DefinitionScanner, SingleCharacterScanner)
   val chowserScanner =
     CombinedScanner(
-      WhiteSpaceScanner, namedsScanner, literalsScanner, OpenBracketScanner, CloseBracketScanner, SeparatorScanner
+      WhiteSpaceScanner, namedsScanner, literalsScanner, miscScanner
     )
 
   sealed trait Result

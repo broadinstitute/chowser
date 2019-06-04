@@ -32,56 +32,54 @@ object ChowserReduceRules {
       Right(LSeq(lTail, BinaryOpToken(term1, op, term2)))
   }
 
-  val bracketedTerm: Rule = {
-    case State(LSeq(LSeq(LSeq(lTail, open: OpenBracketToken), term: TermToken), close: CloseBracketToken), _) =>
-      if (open.openBracket.closer == close.closeBracket) {
-        Right(LSeq(lTail, BracketedTermToken(open, term, close)))
-      } else {
-        Left(s"'${open.string}' cannot be closed with '${close.string}'.")
-      }
-  }
-
   val memberSelection: Rule = {
-    case State(LSeq(LSeq(LSeq(lTail, term: TermToken), dot: SeparatorToken), identifier: IdentifierToken), _)
-      if dot.separator.char == '.' =>
+    case State(LSeq(LSeq(LSeq(lTail, term: TermToken), dot: DotToken), identifier: IdentifierToken), _) =>
       Right(LSeq(lTail, MemberSelectToken(term, dot, identifier)))
   }
 
-  val startCall: Rule = {
-    case State(LSeq(LSeq(lTail, callable: CallableToken), open: OpenBracketToken), _)
-    if open.char == '(' =>
-      Right(LSeq(lTail, CallPartialCloseableToken(callable, open)))
+  val unit: Rule = {
+    case State(LSeq(LSeq(lTail, open: OpenParenToken), close: CloseParenToken), _) =>
+      Right(LSeq(lTail, UnitToken(open, close)))
   }
 
-  def argIsComplete(token: Token): Boolean = ???
-
-  val callPlusFirstArg: Rule = {
-    case State(LSeq(LSeq(lTail, CallPartialCloseableToken(callable, open, ZeroArgsToken(_))), term: TermToken), rhs)
-      if !rhs.hasHeadWith(_.isInstanceOf[OperatorToken]) =>
-      Right(LSeq(lTail, CallPartialCloseableToken(callable, open, ArgsToken.forSingleArg(term))))
+  val oneTuple: Rule = {
+    case State(LSeq(LSeq(LSeq(lTail, open: OpenParenToken), term: TermToken), close: CloseParenToken), _) =>
+      Right(LSeq(lTail, OneTupleToken(open, term, close)))
   }
 
-  val callAddComma: Rule = {
-    case State(LSeq(LSeq(lTail, CallPartialCloseableToken(callable, open, args)), separator: SeparatorToken), _)
-    if separator.char == ',' =>
-      Right(LSeq(lTail, CallPartialTrailingCommaToken(callable, open, args, separator)))
+  val multiTupleStart: Rule = {
+    case State(LSeq(LSeq(LSeq(lTail, open: OpenParenToken), term: TermToken), comma: CommaToken), _) =>
+      Right(LSeq(lTail, MultiTupleUnfinishedToken(open, term, comma)))
   }
 
-  val callAdditionalArg: Rule = {
-    case State(LSeq(LSeq(lTail,
-    CallPartialTrailingCommaToken(callable, open, args: NonZeroArgsToken, comma)), term: TermToken), rhs)
-      if !rhs.hasHeadWith(_.isInstanceOf[OperatorToken]) =>
-      Right(LSeq(lTail, CallPartialCloseableToken(callable, open, args.plus(comma, term))))
+  val multiTupleExtend: Rule = {
+    case
+      State(LSeq(LSeq(LSeq(lTail, multiTupleUnfinished: MultiTupleUnfinishedToken), term: TermToken),
+      comma: CommaToken), _)
+    =>
+      Right(LSeq(lTail, multiTupleUnfinished.extendBy(term, comma)))
   }
 
-  val callClose: Rule = {
-    case State(LSeq(LSeq(lTail, closable: CallPartialCloseableToken), close: CloseBracketToken), _)
-      if close.char == ')' =>
-      Right(LSeq(lTail, closable.closedWith(close)))
+  val multiTupleClose: Rule = {
+    case
+      State(LSeq(LSeq(LSeq(lTail, multiTupleUnfinished: MultiTupleUnfinishedToken), term: TermToken),
+      close: CloseParenToken), _)
+    =>
+      Right(LSeq(lTail, multiTupleUnfinished.closeBy(term, close)))
+  }
+
+  val call: Rule = {
+    case State(LSeq(LSeq(lTail, callable: CallableToken), tuple: TupleToken), _) =>
+      Right(LSeq(lTail, CallToken(callable, tuple)))
+  }
+
+  val termInParens: Rule = {
+    case State(LSeq(lTail, OneTupleToken(open, term, close)),  _) =>
+      Right(LSeq(lTail, BracketedTermToken(open, term, close)))
   }
 
   val all: Rule =
-    skipWhiteSpace orElse unaryOp orElse binaryOp orElse bracketedTerm orElse memberSelection orElse
-      startCall orElse callPlusFirstArg orElse callAddComma orElse callAdditionalArg orElse callClose
+    skipWhiteSpace orElse unaryOp orElse binaryOp orElse memberSelection orElse unit orElse oneTuple orElse
+      multiTupleStart orElse multiTupleExtend orElse multiTupleClose orElse call orElse termInParens
 
 }
