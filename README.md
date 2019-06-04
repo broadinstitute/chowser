@@ -139,3 +139,7 @@ Written in Scala.
       -h, --help            Show help message
     Subcommand: shell
       -h, --help   Show help message
+      
+ # Name
+ 
+ Chowser is named after the bionic flying and very very hungry caterpilar Chowser in *The Insectibles*.
