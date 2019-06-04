@@ -142,4 +142,4 @@ Written in Scala.
       
  # Name
  
- Chowser is named after the bionic flying and very very hungry caterpilar Chowser in *The Insectibles*.
+ Chowser is named after the bionic flying and very very hungry caterpilar Chowser in *Insectibles*.
