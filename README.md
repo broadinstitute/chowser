@@ -1,6 +1,6 @@
 # Chowser
 
-App to munge genomic data (TSV or VCF), including filtering by p-value, canoncalizing variant ids, matching variants across files, selecting preset variant ids, identifying consolidated regions around significant variants, clip data files to given region, turn p-values to Z-scores and convert table of correlations into matrix form.
+[Chowser](https://broad.io/chowser) is an an app to munge genomics-related data files (TSV or VCF), including filtering by p-value, canoncalizing variant ids, matching variants across files, selecting preset variant ids, identifying consolidated regions around significant variants, clip data files to given region, turn p-values to Z-scores and convert table of correlations into matrix form.
 
 Written in Scala.
 
