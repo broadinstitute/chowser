@@ -68,18 +68,18 @@ object ChowserReduceRules {
       Right(LSeq(lTail, multiTupleUnfinished.closeBy(term, close)))
   }
 
-  val call: Rule = {
-    case State(LSeq(LSeq(lTail, callable: CallableToken), tuple: TupleToken), _) =>
-      Right(LSeq(lTail, CallToken(callable, tuple)))
-  }
-
   val termInParens: Rule = {
     case State(LSeq(lTail, OneTupleToken(open, term, close)),  _) =>
       Right(LSeq(lTail, BracketedTermToken(open, term, close)))
   }
 
+  val call: Rule = {
+    case State(LSeq(LSeq(lTail, term: TermToken), callable: CallableToken), _) =>
+      Right(LSeq(lTail, CallToken(term, callable)))
+  }
+
   val all: Rule =
     skipWhiteSpace orElse unaryOp orElse binaryOp orElse memberSelection orElse unit orElse oneTuple orElse
-      multiTupleStart orElse multiTupleExtend orElse multiTupleClose orElse call orElse termInParens
+      multiTupleStart orElse multiTupleExtend orElse multiTupleClose orElse termInParens orElse call
 
 }

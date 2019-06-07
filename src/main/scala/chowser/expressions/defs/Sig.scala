@@ -1,4 +1,6 @@
-package chowser.expressions
+package chowser.expressions.defs
+
+import chowser.expressions.{Identifier, Type}
 
 sealed trait Sig {
   def id: Identifier
@@ -12,6 +14,6 @@ object Sig {
 
   case class BinaryOpSig(id: Identifier, lhsType: Type, rhsType: Type) extends Sig
 
-  case class MethodSig(id: Identifier, ownerType: Type, argTypes: Seq[Type]) extends Sig
+  case class FunctionSig(id: Identifier, argTypes: Seq[Type]) extends Sig
 
 }

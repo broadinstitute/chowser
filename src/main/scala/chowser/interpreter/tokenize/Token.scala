@@ -176,9 +176,8 @@ object Token {
       open +: argsFirst.flatMap { case (term, comma) => Seq(term, comma) } :+ argLast :+ close
   }
 
-  case class CallToken(callable: CallableToken, tuple: TupleToken)
-    extends TermToken with CompositeToken {
-    override def children: Seq[Token] = Seq(callable, tuple)
+  case class CallToken(term: TermToken, callable: CallableToken) extends TermToken with CompositeToken {
+    override def children: Seq[Token] = Seq(term, callable)
   }
 
 }
