@@ -34,10 +34,14 @@ object ChowserInterpreter {
         Left("Could not parse\n" + reduceResult.errors.mkString("\n"))
       } else {
         if(reduceResult.tokens.size != 1) {
-          Left("Couldn't parse. Not sure why.")
+          if(reduceResult.tokens.isEmpty) {
+            Left("Found no parsable tokens.")
+          } else {
+            Left("Superflous tokens " + reduceResult.tokens.tail.map(_.string).mkString(""))
+          }
         } else {
           val token = reduceResult.tokens.head
-          Left("Work in progress")
+          Left("Great, parsing completed successfully. Now, if only evaluation was implemented!")
         }
       }
     }
