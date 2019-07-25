@@ -71,7 +71,7 @@ object Expression {
               context.symbolTable.binaryOpTable.lookupDef(opSig) match {
                 case None =>
                   Failure(s"No binary operator ${op.string} defined for argument types" +
-                    s" ${lhsValue.tpe.asString} and ${lhsValue.tpe.asString}.")
+                    s" ${lhsValue.tpe.asString} and ${rhsValue.tpe.asString}.")
                 case Some(opDef) => opDef.function(lhsValue, rhsValue)
               }
           }

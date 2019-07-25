@@ -1,13 +1,9 @@
 package chowser.expressions.defs.predef
 
-import chowser.expressions.defs.Def.BinaryOpDef
-import chowser.expressions.defs.SymbolTable
-import chowser.expressions.defs.SymbolTable.{BasicBinaryOpTable, BasicFunctionTable, BasicScalarTable, BasicSymbolTable, BasicUnitaryOpTable}
 import chowser.expressions.defs.DefTable.BasicDefTable
-import chowser.expressions.defs.Ref.BinaryOpRef
-import chowser.expressions.defs.Sig.BinaryOpSig
-import chowser.expressions.values.ValueOps
-import chowser.expressions.{Identifier, IntType, Type}
+import chowser.expressions.defs.SymbolTable
+import chowser.expressions.defs.SymbolTable._
+import chowser.expressions.values.ValueOps.{floatBinary, intBinary}
 
 object ChowserPredefDefs {
 
@@ -16,7 +12,14 @@ object ChowserPredefDefs {
   val unitaryOpTable: BasicUnitaryOpTable = BasicDefTable.empty
 
   val binaryOpTable: BasicBinaryOpTable = BasicDefTable(Set(
-    BinaryOpDef(BinaryOpRef(BinaryOpSig(Identifier(None, "+"), IntType, IntType), IntType), ValueOps.intBinary(_+_))
+    intBinary("+", _ + _),
+    intBinary("-", _ - _),
+    intBinary("*", _ * _),
+    intBinary("/", _ / _),
+    floatBinary("+", _ + _),
+    floatBinary("-", _ - _),
+    floatBinary("*", _ * _),
+    floatBinary("/", _ / _)
   ))
 
   val functionTable: BasicFunctionTable = BasicDefTable.empty
