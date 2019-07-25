@@ -1,7 +1,7 @@
 package chowser.expressions
 
 import chowser.expressions.defs.Sig.{BinaryOpSig, ScalarSig, UnitaryOpSig}
-import chowser.expressions.values.{FloatValue, IntValue, StringValue, UnitValue}
+import chowser.expressions.values.{FloatValue, IntValue, StringValue, TupleValue, UnitValue, Value}
 
 trait Expression {
   def evaluate(context: Context): Result
@@ -31,6 +31,13 @@ object Expression {
   case class StringLiteral(value: String) extends Literal[String] {
     override def evaluate(context: Context): Result = Success(StringValue(value))
   }
+
+  object UnitLiteral extends Literal[Unit] {
+    override def value: Unit = ()
+
+    override def evaluate(context: Context): Result = Success(UnitValue)
+  }
+
 
   case class IdentifierExpression(identifier: Identifier) extends Expression {
     override def evaluate(context: Context): Result = {
@@ -79,6 +86,26 @@ object Expression {
     }
   }
 
-
+  case class TupleExpression(elements: Seq[Expression]) extends Expression {
+    override def evaluate(context: Context): Result = {
+      val elementIter = elements.iterator
+      var isSuccess: Boolean = true
+      var values: Seq[Value] = Seq.empty
+      var failureOpt: Option[Failure] = None
+      while (failureOpt.isEmpty && elementIter.hasNext) {
+        val nextElement = elementIter.next()
+        nextElement.evaluate(context) match {
+          case Success(value) =>
+            values :+= value
+          case failure: Failure =>
+            failureOpt = Some(failure)
+        }
+      }
+      failureOpt match {
+        case Some(failure) => failure
+        case None => Success(TupleValue(values))
+      }
+    }
+  }
 
 }

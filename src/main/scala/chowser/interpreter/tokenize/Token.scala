@@ -1,6 +1,6 @@
 package chowser.interpreter.tokenize
 
-import chowser.expressions.Expression.{BinaryOpExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, UnaryOpExpression}
+import chowser.expressions.Expression.{BinaryOpExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, TupleExpression, UnaryOpExpression, UnitLiteral}
 import chowser.expressions.{Expression, Identifier, Operator}
 
 sealed trait Token {
@@ -157,37 +157,45 @@ object Token {
     override def children: Seq[Token] = Seq(term, dot, member)
   }
 
-  sealed trait TupleToken extends TermToken
+  sealed trait TupleToken extends ExpressionToken
 
   case class UnitToken(open: OpenParenToken, close: CloseParenToken) extends TupleToken with CompositeToken {
     override def children: Seq[Token] = Seq(open, close)
+
+    override def expression: Expression = UnitLiteral
   }
 
   case class OneTupleToken(open: OpenParenToken, term: ExpressionToken, close: CloseParenToken)
     extends TupleToken with CompositeToken {
     override def children: Seq[Token] = Seq(open, term, close)
+
+    override def expression: Expression = term.expression
   }
 
-  case class MultiTupleUnfinishedToken(open: OpenParenToken, args: Seq[(TermToken, CommaToken)])
+  case class MultiTupleUnfinishedToken(open: OpenParenToken, args: Seq[(ExpressionToken, CommaToken)])
     extends CompositeToken {
     override def children: Seq[Token] = open +: args.flatMap { case (term, comma) => Seq(term, comma) }
 
-    def extendBy(term: TermToken, comma: CommaToken): MultiTupleUnfinishedToken =
+    def extendBy(term: ExpressionToken, comma: CommaToken): MultiTupleUnfinishedToken =
       MultiTupleUnfinishedToken(open, args :+ (term, comma))
 
-    def closeBy(term: TermToken, close: CloseParenToken): MultiTupleToken =
+    def closeBy(term: ExpressionToken, close: CloseParenToken): MultiTupleToken =
       MultiTupleToken(open, args, term, close)
   }
 
   object MultiTupleUnfinishedToken {
-    def apply(open: OpenParenToken, term: TermToken, comma: CommaToken): MultiTupleUnfinishedToken =
+    def apply(open: OpenParenToken, term: ExpressionToken, comma: CommaToken): MultiTupleUnfinishedToken =
       MultiTupleUnfinishedToken(open, Seq((term, comma)))
   }
 
-  case class MultiTupleToken(open: OpenParenToken, argsFirst: Seq[(TermToken, CommaToken)], argLast: TermToken,
-                             close: CloseParenToken) extends TupleToken with CompositeToken {
+  case class MultiTupleToken(open: OpenParenToken, argsFirst: Seq[(ExpressionToken, CommaToken)],
+                             argLast: ExpressionToken, close: CloseParenToken) extends TupleToken with CompositeToken {
     override def children: Seq[Token] =
       open +: argsFirst.flatMap { case (term, comma) => Seq(term, comma) } :+ argLast :+ close
+
+    def elementTokens: Seq[ExpressionToken] = argsFirst.map(_._1) :+ argLast
+
+    override def expression: Expression = TupleExpression(elementTokens.map(_.expression))
   }
 
   case class CallToken(term: TermToken, callable: CallableToken) extends TermToken with CompositeToken {

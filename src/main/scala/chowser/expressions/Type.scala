@@ -29,3 +29,7 @@ object StringType extends Type {
 object UnitType extends Type {
   override def asString: String = "Unit"
 }
+
+case class TupleType(argTypes: Seq[Type]) extends Type {
+  override def asString: String = argTypes.map(_.asString).mkString("(", ", ", ")")
+}

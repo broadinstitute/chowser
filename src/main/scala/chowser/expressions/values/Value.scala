@@ -1,6 +1,6 @@
 package chowser.expressions.values
 
-import chowser.expressions.{FloatType, IntType, StringType, Type, UnitType}
+import chowser.expressions.{FloatType, IntType, StringType, TupleType, Type, UnitType}
 
 trait Value {
   def tpe: Type
@@ -32,4 +32,10 @@ case class StringValue(value: String) extends Value {
   override def tpe: StringType.type = StringType
 
   override def asString: String = "\"" + value.toString + "\""
+}
+
+case class TupleValue(values: Seq[Value]) extends Value {
+  override def tpe: Type = TupleType(values.map(_.tpe))
+
+  override def asString: String = values.map(_.asString).mkString("(", ", ", ")")
 }
