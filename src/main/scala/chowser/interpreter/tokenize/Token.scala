@@ -1,6 +1,6 @@
 package chowser.interpreter.tokenize
 
-import chowser.expressions.Expression
+import chowser.expressions.{Expression, Operator}
 
 sealed trait Token {
   def string: String

@@ -1,4 +1,4 @@
-package chowser.interpreter.tokenize
+package chowser.expressions
 
 case class Operator(string: String) {
   def canBeUnaryPrefix: Boolean = Operator.canBeUnaryPrefix(string)

@@ -2,7 +2,7 @@ package chowser.interpreter.tokenize
 
 import java.util.regex.Pattern
 
-import chowser.expressions.Expression
+import chowser.expressions.{Expression, Operator}
 import chowser.interpreter.tokenize.Token._
 
 trait Scanner {
