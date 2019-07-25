@@ -93,11 +93,11 @@ object Scanner {
       index
     }
 
-    def makeIntLiteral(string: String, pos: Int, size: Int): ExpressionToken = {
+    def makeIntLiteral(string: String, pos: Int, size: Int): IntLiteralToken = {
       val tokenString = string.substring(0, size)
       val value = tokenString.toLong
-      val expression = Expression.IntLiteral(value)
-      ExpressionToken(tokenString, expression, pos, size)
+      val intLiteral = Expression.IntLiteral(value)
+      IntLiteralToken(tokenString, intLiteral, pos, size)
     }
 
     override def scan(state: ScanState): Result = {
@@ -141,8 +141,8 @@ object Scanner {
       size = floatString.size
       if (floatString.nonEmpty) {
         val value = floatString.toDouble
-        val expression = Expression.FloatLiteral(value)
-        Success(state.addToken(ExpressionToken(floatString, expression, state.pos, size)))
+        val floatLiteral = Expression.FloatLiteral(value)
+        Success(state.addToken(FloatLiteralToken(floatString, floatLiteral, state.pos, size)))
       } else {
         Untriggered
       }
@@ -168,9 +168,9 @@ object Scanner {
             val char = remainder.charAt(index)
             if (char == '"') {
               val stringString = remainder.substring(0, index + 1)
-              val expression = Expression.StringLiteral(value)
+              val stringLiteral = Expression.StringLiteral(value)
               resultOpt =
-                Some(Success(state.addToken(ExpressionToken(stringString, expression, state.pos, index + 1))))
+                Some(Success(state.addToken(StringLiteralToken(stringString, stringLiteral, state.pos, index + 1))))
             } else if (char == '\\') {
               index += 1
               if (index >= remainder.size) {

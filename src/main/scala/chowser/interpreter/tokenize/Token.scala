@@ -1,6 +1,7 @@
 package chowser.interpreter.tokenize
 
-import chowser.expressions.{Expression, Operator}
+import chowser.expressions.Expression.{BinaryOpExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, UnaryOpExpression}
+import chowser.expressions.{Expression, Identifier, Operator}
 
 sealed trait Token {
   def string: String
@@ -18,7 +19,9 @@ object Token {
 
   sealed trait CallableToken extends TermToken
 
-  case class IdentifierToken(string: String, pos: Int, size: Int) extends CallableToken
+  case class IdentifierToken(string: String, pos: Int, size: Int) extends CallableToken with ExpressionToken {
+    override def expression: IdentifierExpression = IdentifierExpression(Identifier(None, string))
+  }
 
   object IdentifierToken {
     def apply(string: String, pos: Int): IdentifierToken = IdentifierToken(string, pos, string.size)
@@ -32,7 +35,23 @@ object Token {
     def precedence: Int = operator.precedence
   }
 
-  case class ExpressionToken(string: String, expression: Expression, pos: Int, size: Int) extends TermToken
+  sealed trait ExpressionToken extends TermToken {
+    def expression: Expression
+  }
+
+  sealed trait LiteralToken[T] extends ExpressionToken {
+    def literal: Literal[T]
+    override def expression: Expression = literal
+  }
+
+  case class IntLiteralToken(string: String, literal: IntLiteral, pos: Int, size: Int)
+    extends LiteralToken[Long]
+
+  case class FloatLiteralToken(string: String, literal: FloatLiteral, pos: Int, size: Int)
+    extends LiteralToken[Double]
+
+  case class StringLiteralToken(string: String, literal: StringLiteral, pos: Int, size: Int)
+    extends LiteralToken[String]
 
   sealed trait SingleCharacterToken extends Token {
     def char: Char
@@ -70,14 +89,6 @@ object Token {
     override def close: CloseBracket = Brackets.Braces.closeBracket
   }
 
-  case class OpenBracketTokenOld(openBracket: OpenBracket, pos: Int) extends SingleCharacterToken {
-    override def char: Char = openBracket.char
-  }
-
-  case class CloseBracketTokenOld(closeBracket: CloseBracket, pos: Int) extends SingleCharacterToken {
-    override def char: Char = closeBracket.char
-  }
-
   case class DefinitionToken(pos: Int) extends Token {
     override def string: String = ":="
 
@@ -98,10 +109,6 @@ object Token {
 
   case class DotToken(pos: Int) extends SingleCharacterToken {
     override def char: Char = '.'
-  }
-
-  case class SeparatorTokenOld(separator: Separator, pos: Int) extends SingleCharacterToken {
-    override def char: Char = separator.char
   }
 
   val singleCharacterTokenGenerators: Map[Char, Int => SingleCharacterToken] = Map(
@@ -125,20 +132,27 @@ object Token {
     override def pos: Int = children.head.pos
   }
 
-  case class UnaryOpToken(op: OperatorToken, term: TermToken) extends TermToken with CompositeToken {
-    override def children: Seq[Token] = Seq(op, term)
+  case class UnaryOpToken(op: OperatorToken, arg: ExpressionToken) extends ExpressionToken with CompositeToken {
+    override def children: Seq[Token] = Seq(op, arg)
+
+    override def expression: UnaryOpExpression = UnaryOpExpression(op.operator, arg.expression)
   }
 
-  case class BinaryOpToken(lhs: TermToken, op: OperatorToken, rhs: TermToken) extends TermToken with CompositeToken {
+  case class BinaryOpToken(lhs: ExpressionToken, op: OperatorToken, rhs: ExpressionToken)
+    extends ExpressionToken with CompositeToken {
     override def children: Seq[Token] = Seq(lhs, op, rhs)
+
+    override def expression: BinaryOpExpression = BinaryOpExpression(op.operator, lhs.expression, rhs.expression)
   }
 
-  case class BracketedTermToken(open: OpenBracketToken, term: TermToken, close: CloseBracketToken)
-    extends TermToken with CompositeToken {
+  case class BracketedTermToken(open: OpenBracketToken, term: ExpressionToken, close: CloseBracketToken)
+    extends ExpressionToken with CompositeToken {
     override def children: Seq[Token] = Seq(open, term, close)
+
+    override def expression: Expression = term.expression
   }
 
-  case class MemberSelectToken(term: TermToken, dot: DotToken, member: IdentifierToken)
+  case class MemberSelectToken(term: ExpressionToken, dot: DotToken, member: IdentifierToken)
     extends CallableToken with CompositeToken {
     override def children: Seq[Token] = Seq(term, dot, member)
   }
@@ -149,7 +163,7 @@ object Token {
     override def children: Seq[Token] = Seq(open, close)
   }
 
-  case class OneTupleToken(open: OpenParenToken, term: TermToken, close: CloseParenToken)
+  case class OneTupleToken(open: OpenParenToken, term: ExpressionToken, close: CloseParenToken)
     extends TupleToken with CompositeToken {
     override def children: Seq[Token] = Seq(open, term, close)
   }

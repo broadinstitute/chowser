@@ -1,6 +1,7 @@
 package chowser.interpreter
 
 import chowser.expressions.Expression
+import chowser.interpreter.tokenize.Token.ExpressionToken
 import chowser.interpreter.tokenize.{ScanState, Scanner}
 import chowser.interpreter.treemaker.{ChowserReduceRules, Reducer}
 
@@ -40,8 +41,13 @@ object ChowserInterpreter {
             Left("Superflous tokens " + reduceResult.tokens.tail.map(_.string).mkString(""))
           }
         } else {
-          val token = reduceResult.tokens.head
-          Left("Great, parsing completed successfully. Now, if only evaluation was implemented!")
+          reduceResult.tokens.head match {
+            case expressionToken: ExpressionToken =>
+              val expression = expressionToken.expression
+              Right(expression)
+            case _ =>
+              Left("Does not evaluate to an expression.")
+          }
         }
       }
     }

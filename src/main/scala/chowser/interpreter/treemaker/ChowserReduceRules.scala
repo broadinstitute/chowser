@@ -12,10 +12,10 @@ object ChowserReduceRules {
   }
 
   val unaryOp: Rule = {
-    case State(LSeq(LSeq(lTail, op: OperatorToken), term: TermToken), _)
-      if !lTail.hasHeadWith(_.isInstanceOf[TermToken]) =>
+    case State(LSeq(LSeq(lTail, op: OperatorToken), arg: ExpressionToken), _)
+      if !lTail.hasHeadWith(_.isInstanceOf[ExpressionToken]) =>
       if (op.operator.canBeUnaryPrefix) {
-        Right(LSeq(lTail, UnaryOpToken(op, term)))
+        Right(LSeq(lTail, UnaryOpToken(op, arg)))
       } else {
         Left(s"'${op.string}' is not a valid unary prefix operator.")
       }
@@ -27,13 +27,13 @@ object ChowserReduceRules {
   }
 
   val binaryOp: Rule = {
-    case State(LSeq(LSeq(LSeq(lTail, term1: TermToken), op: OperatorToken), term2: TermToken), rhs)
+    case State(LSeq(LSeq(LSeq(lTail, term1: ExpressionToken), op: OperatorToken), term2: ExpressionToken), rhs)
       if !rhs.hasHeadWith(isOpHigherThan(op.precedence)) =>
       Right(LSeq(lTail, BinaryOpToken(term1, op, term2)))
   }
 
   val memberSelection: Rule = {
-    case State(LSeq(LSeq(LSeq(lTail, term: TermToken), dot: DotToken), identifier: IdentifierToken), _) =>
+    case State(LSeq(LSeq(LSeq(lTail, term: ExpressionToken), dot: DotToken), identifier: IdentifierToken), _) =>
       Right(LSeq(lTail, MemberSelectToken(term, dot, identifier)))
   }
 
@@ -43,18 +43,18 @@ object ChowserReduceRules {
   }
 
   val oneTuple: Rule = {
-    case State(LSeq(LSeq(LSeq(lTail, open: OpenParenToken), term: TermToken), close: CloseParenToken), _) =>
+    case State(LSeq(LSeq(LSeq(lTail, open: OpenParenToken), term: ExpressionToken), close: CloseParenToken), _) =>
       Right(LSeq(lTail, OneTupleToken(open, term, close)))
   }
 
   val multiTupleStart: Rule = {
-    case State(LSeq(LSeq(LSeq(lTail, open: OpenParenToken), term: TermToken), comma: CommaToken), _) =>
+    case State(LSeq(LSeq(LSeq(lTail, open: OpenParenToken), term: ExpressionToken), comma: CommaToken), _) =>
       Right(LSeq(lTail, MultiTupleUnfinishedToken(open, term, comma)))
   }
 
   val multiTupleExtend: Rule = {
     case
-      State(LSeq(LSeq(LSeq(lTail, multiTupleUnfinished: MultiTupleUnfinishedToken), term: TermToken),
+      State(LSeq(LSeq(LSeq(lTail, multiTupleUnfinished: MultiTupleUnfinishedToken), term: ExpressionToken),
       comma: CommaToken), _)
     =>
       Right(LSeq(lTail, multiTupleUnfinished.extendBy(term, comma)))
@@ -62,7 +62,7 @@ object ChowserReduceRules {
 
   val multiTupleClose: Rule = {
     case
-      State(LSeq(LSeq(LSeq(lTail, multiTupleUnfinished: MultiTupleUnfinishedToken), term: TermToken),
+      State(LSeq(LSeq(LSeq(lTail, multiTupleUnfinished: MultiTupleUnfinishedToken), term: ExpressionToken),
       close: CloseParenToken), _)
     =>
       Right(LSeq(lTail, multiTupleUnfinished.closeBy(term, close)))

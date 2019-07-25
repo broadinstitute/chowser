@@ -9,7 +9,7 @@ object ShellExecuter extends ChowserExecuter[ShellCommand.type] {
 
   def execute(): Result = {
     println("Welcome to ChowserShell!")
-    val context = new Context
+    val context = Context.predef
     while(!context.exitIsRequested) {
       print("chowser> ")
       val input = Console.in.readLine()

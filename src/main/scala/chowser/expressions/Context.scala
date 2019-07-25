@@ -1,8 +1,12 @@
 package chowser.expressions
 
-import chowser.expressions.defs.DefRegistry
+import chowser.expressions.defs.SymbolTable
+import chowser.expressions.defs.predef.ChowserPredefDefs
 
-class Context {
+class Context(var symbolTable: SymbolTable) {
   var exitIsRequested: Boolean = false
-  var symbolTable: DefRegistry = DefRegistry.empty
+}
+
+object Context {
+  def predef: Context = new Context(ChowserPredefDefs.registry)
 }

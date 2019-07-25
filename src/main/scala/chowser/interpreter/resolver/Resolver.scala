@@ -1,6 +1,6 @@
 package chowser.interpreter.resolver
 
-import chowser.expressions.defs.DefRegistry
+import chowser.expressions.defs.SymbolTable
 import chowser.expressions.defs.Sig.ScalarSig
 import chowser.expressions.predef.ChowserPredef
 import chowser.expressions.{Failure, Identifier, Result}
@@ -9,7 +9,7 @@ import chowser.interpreter.tokenize.Token.{IdentifierToken, WhiteSpaceToken}
 
 object Resolver {
 
-  def resolve(token: Token, namespace: Identifier, registry: DefRegistry): Result = {
+  def resolve(token: Token, namespace: Identifier, registry: SymbolTable): Result = {
     token match {
       case WhiteSpaceToken(_, _, _) => Failure("This is only white space")
       case IdentifierToken(string, _, _) =>
