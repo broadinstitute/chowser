@@ -19,8 +19,20 @@ object Token {
 
   sealed trait CallableToken extends TermToken
 
-  case class IdentifierToken(string: String, pos: Int, size: Int) extends CallableToken with ExpressionToken {
+  trait IdentifierToken extends CallableToken with ExpressionToken {
+    def identifier: Identifier
     override def expression: IdentifierExpression = IdentifierExpression(Identifier(None, string))
+  }
+
+  case class LocalIdentifierToken(string: String, pos: Int, size: Int) extends IdentifierToken {
+    override def identifier: Identifier = Identifier(None, string)
+  }
+
+  case class NamespacedIdentifier(namespace: IdentifierToken, dot: DotToken,
+                                  localIdentifier: LocalIdentifierToken) extends IdentifierToken with CompositeToken {
+    override def identifier: Identifier = Identifier(Some(namespace.identifier), localIdentifier.string)
+
+    override def children: Seq[Token] = Seq(namespace, dot, localIdentifier)
   }
 
   object IdentifierToken {
@@ -198,8 +210,15 @@ object Token {
     override def expression: Expression = TupleExpression(elementTokens.map(_.expression))
   }
 
-  case class CallToken(term: TermToken, callable: CallableToken) extends TermToken with CompositeToken {
+  case class CallTokenOld(term: TermToken, callable: CallableToken) extends TermToken with CompositeToken {
     override def children: Seq[Token] = Seq(term, callable)
+  }
+
+  case class CallToken(args: Seq[ExpressionToken], identifier: IdentifierToken)
+    extends ExpressionToken with CompositeToken {
+    override def expression: Expression = ???
+
+    override def children: Seq[Token] = ???
   }
 
 }

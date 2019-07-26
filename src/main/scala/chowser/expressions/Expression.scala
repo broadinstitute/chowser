@@ -1,6 +1,6 @@
 package chowser.expressions
 
-import chowser.expressions.defs.Sig.{BinaryOpSig, ScalarSig, UnitaryOpSig}
+import chowser.expressions.defs.Sig.{BinaryOpSig, FunctionSig, ScalarSig, UnitaryOpSig}
 import chowser.expressions.values.{FloatValue, IntValue, StringValue, TupleValue, UnitValue, Value}
 
 trait Expression {
@@ -89,21 +89,42 @@ object Expression {
   case class TupleExpression(elements: Seq[Expression]) extends Expression {
     override def evaluate(context: Context): Result = {
       val elementIter = elements.iterator
-      var isSuccess: Boolean = true
       var values: Seq[Value] = Seq.empty
       var failureOpt: Option[Failure] = None
       while (failureOpt.isEmpty && elementIter.hasNext) {
-        val nextElement = elementIter.next()
-        nextElement.evaluate(context) match {
-          case Success(value) =>
-            values :+= value
-          case failure: Failure =>
-            failureOpt = Some(failure)
+        elementIter.next().evaluate(context) match {
+          case Success(value) => values :+= value
+          case failure: Failure => failureOpt = Some(failure)
         }
       }
       failureOpt match {
         case Some(failure) => failure
         case None => Success(TupleValue(values))
+      }
+    }
+  }
+
+  case class CallExpression(args: Seq[Expression], identifier: Identifier) extends Expression {
+    override def evaluate(context: Context): Result = {
+      val argIter = args.iterator
+      var argValues: Seq[Value] = Seq.empty
+      var failureOpt: Option[Failure] = None
+      while (failureOpt.isEmpty && argIter.hasNext) {
+        argIter.next().evaluate(context) match {
+          case Success(value) => argValues :+= value
+          case failure: Failure => failureOpt = Some(failure)
+        }
+      }
+      failureOpt match {
+        case Some(failure) => failure
+        case None =>
+          val argTypes = argValues.map(_.tpe)
+          val funSig = FunctionSig(identifier, argTypes)
+          val funRefOpt = context.symbolTable.functionTable.lookupDef(funSig)
+          funRefOpt match {
+            case None => Failure(s"No function definition found for ${funSig}.")
+            case Some(funDef) => funDef.function(argValues)
+          }
       }
     }
   }
