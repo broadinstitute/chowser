@@ -36,7 +36,7 @@ object Token {
   }
 
   object IdentifierToken {
-    def apply(string: String, pos: Int): IdentifierToken = IdentifierToken(string, pos, string.size)
+    def apply(string: String, pos: Int): IdentifierToken = LocalIdentifierToken(string, pos, string.size)
   }
 
   case class OperatorToken(operator: Operator, pos: Int) extends Token {
