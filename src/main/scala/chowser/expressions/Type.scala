@@ -33,3 +33,7 @@ object UnitType extends Type {
 case class TupleType(argTypes: Seq[Type]) extends Type {
   override def asString: String = argTypes.map(_.asString).mkString("(", ", ", ")")
 }
+
+case class LambdaType(arity: Int) extends Type {
+  override def asString: String = s"L$arity"
+}

@@ -40,4 +40,10 @@ object NumberParser {
     override def parse(string: String): Int = string.toInt
   }
 
+  object LongParser extends NumberParser[Long] {
+    override def regex: String = "[+-]?[0-9]+"
+
+    override def parse(string: String): Long = string.toLong
+  }
+
 }

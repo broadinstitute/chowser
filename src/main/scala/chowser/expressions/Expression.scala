@@ -1,9 +1,10 @@
 package chowser.expressions
 
 import chowser.expressions.defs.Sig.{BinaryOpSig, FunctionSig, ScalarSig, UnitaryOpSig}
-import chowser.expressions.values.{FloatValue, IntValue, StringValue, TupleValue, UnitValue, Value}
+import chowser.expressions.values._
 
 trait Expression {
+  def asString: String
   def evaluate(context: Context): Result
 }
 
@@ -14,28 +15,32 @@ object Expression {
       context.exitIsRequested = true
       Success(UnitValue)
     }
+
+    override def asString: String = "exit()"
   }
 
   trait Literal[T] extends Expression {
+    def asValue: Value
     def value: T
+    override def evaluate(context: Context): Result = Success(asValue)
+    override def asString: String = asValue.asString
   }
 
   case class IntLiteral(value: Long) extends Literal[Long] {
-    override def evaluate(context: Context): Result = Success(IntValue(value))
+    override def asValue: IntValue = IntValue(value)
   }
 
   case class FloatLiteral(value: Double) extends Literal[Double] {
-    override def evaluate(context: Context): Result = Success(FloatValue(value))
+    override def asValue: FloatValue = FloatValue(value)
   }
 
   case class StringLiteral(value: String) extends Literal[String] {
-    override def evaluate(context: Context): Result = Success(StringValue(value))
+    override def asValue: StringValue = StringValue(value)
   }
 
   object UnitLiteral extends Literal[Unit] {
     override def value: Unit = ()
-
-    override def evaluate(context: Context): Result = Success(UnitValue)
+    override def asValue: UnitValue.type = UnitValue
   }
 
 
@@ -50,6 +55,16 @@ object Expression {
         }
       }
     }
+
+    override def asString: String = identifier.asString
+  }
+
+  def asStringMaybeParenthesized(expression: Expression): String = {
+    expression match {
+      case literal: Literal[_] => literal.asString
+      case identifierExpression: IdentifierExpression => identifierExpression.asString
+      case _ => "(" + expression.asString + ")"
+    }
   }
 
   case class UnaryOpExpression(op: Operator, arg: Expression) extends Expression {
@@ -63,6 +78,11 @@ object Expression {
             case Some(opDef) => opDef.function(argValue)
           }
       }
+    }
+
+    override def asString: String = {
+      val argString = asStringMaybeParenthesized(arg)
+      op.string + argString
     }
   }
 
@@ -84,6 +104,12 @@ object Expression {
           }
       }
     }
+
+    override def asString: String = {
+      val lhsString = asStringMaybeParenthesized(lhs)
+      val rhsString = asStringMaybeParenthesized(lhs)
+      lhsString + op.string + rhsString
+    }
   }
 
   case class TupleExpression(elements: Seq[Expression]) extends Expression {
@@ -101,6 +127,10 @@ object Expression {
         case Some(failure) => failure
         case None => Success(TupleValue(values))
       }
+    }
+
+    override def asString: String = {
+      elements.map(asStringMaybeParenthesized).mkString("(", ", ", ")")
     }
   }
 
@@ -126,6 +156,10 @@ object Expression {
             case Some(funDef) => funDef.function(argValues)
           }
       }
+    }
+
+    override def asString: String = {
+      args.map(asStringMaybeParenthesized).mkString(" ") + " " + identifier.asString
     }
   }
 
