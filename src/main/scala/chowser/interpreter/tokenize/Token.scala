@@ -1,7 +1,8 @@
 package chowser.interpreter.tokenize
 
-import chowser.expressions.Expression.{BinaryOpExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, TupleExpression, UnaryOpExpression, UnitLiteral}
+import chowser.expressions.Expression.{ArgExpression, BinaryOpExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, TupleExpression, UnaryOpExpression, UnitLiteral}
 import chowser.expressions.{Expression, Identifier, Operator}
+import chowser.util.NumberParser
 
 sealed trait Token {
   def string: String
@@ -19,9 +20,34 @@ object Token {
 
   sealed trait CallableToken extends TermToken
 
+  def argumentOpt(string: String): Option[ArgExpression] = {
+    if (string == "_") {
+      Some(ArgExpression.createNewSliding())
+    } else {
+      if (string.startsWith("_") && string.endsWith("_") && string.size > 2) {
+        val middle = string.substring(1, string.size - 1)
+        if (NumberParser.UnsignedIntParser.isValid(middle)) {
+          val pos = NumberParser.UnsignedIntParser.parse(middle)
+          Some(ArgExpression.createNewPinned(pos))
+        } else {
+          None
+        }
+      } else {
+        None
+      }
+    }
+  }
+
+
   trait IdentifierToken extends CallableToken with ExpressionToken {
     def identifier: Identifier
-    override def expression: IdentifierExpression = IdentifierExpression(Identifier(None, string))
+
+    override def expression: Expression = {
+      argumentOpt(string) match {
+        case Some(argExpression) => argExpression
+        case None => IdentifierExpression(Identifier(None, string))
+      }
+    }
   }
 
   case class LocalIdentifierToken(string: String, pos: Int, size: Int) extends IdentifierToken {
@@ -53,6 +79,7 @@ object Token {
 
   sealed trait LiteralToken[T] extends ExpressionToken {
     def literal: Literal[T]
+
     override def expression: Expression = literal
   }
 
