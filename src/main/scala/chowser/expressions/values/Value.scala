@@ -2,6 +2,7 @@ package chowser.expressions.values
 
 import chowser.expressions.{Expression, FloatType, IntType, LambdaType, StringType, TupleType, Type, UnitType}
 import chowser.util.NumberParser.LongParser
+import chowser.util.StringUtils
 
 trait Value {
   def tpe: Type
@@ -39,7 +40,8 @@ case class FloatValue(value: Double) extends Value {
 case class StringValue(value: String) extends Value {
   override def tpe: StringType.type = StringType
 
-  override def asString: String = "\"" + value.toString + "\""
+  override def asString: String =
+    "\"" + StringUtils.escape(value) + "\""
 }
 
 case class TupleValue(values: Seq[Value]) extends Value {
@@ -51,5 +53,5 @@ case class TupleValue(values: Seq[Value]) extends Value {
 case class LambdaValue(expression: Expression, arity: Int) extends Value {
   override def tpe: Type = LambdaType(arity)
 
-  override def asString: String = ???
+  override def asString: String = expression.asString
 }
