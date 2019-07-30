@@ -9,7 +9,8 @@ import chowser.expressions.values._
 
 trait Expression {
   def hasArguments: Boolean
-  def createArgumentList(mapping: ArgumentList): ArgumentList
+
+  def createArgumentList(argumentList: ArgumentList): ArgumentList
 
   def asString: String
 
@@ -26,7 +27,9 @@ object Expression {
 
   object Exit extends Expression {
     def hasArguments: Boolean = false
+
     def createArgumentList(mapping: ArgumentList): ArgumentList = mapping
+
     override def evaluate(runtime: ChowserRuntime, symbolTable: SymbolTable): Either[String, Value] = {
       runtime.exitIsRequested = true
       Right(UnitValue)
@@ -35,31 +38,37 @@ object Expression {
     override def asString: String = "exit()"
   }
 
-  trait Literal[T] extends Expression {
+  trait Literal extends Expression {
     def hasArguments: Boolean = false
+
     def createArgumentList(mapping: ArgumentList): ArgumentList = mapping
+
     def asValue: Value
 
-    def value: T
+    def value: Any
 
     override def evaluate(runtime: ChowserRuntime, symbolTable: SymbolTable): Right[String, Value] = Right(asValue)
 
     override def asString: String = asValue.asString
   }
 
-  case class IntLiteral(value: Long) extends Literal[Long] {
+  case class IntLiteral(value: Long) extends Literal {
     override def asValue: IntValue = IntValue(value)
   }
 
-  case class FloatLiteral(value: Double) extends Literal[Double] {
+  case class FloatLiteral(value: Double) extends Literal {
     override def asValue: FloatValue = FloatValue(value)
   }
 
-  case class StringLiteral(value: String) extends Literal[String] {
+  case class StringLiteral(value: String) extends Literal {
     override def asValue: StringValue = StringValue(value)
   }
 
-  object UnitLiteral extends Literal[Unit] {
+  case class TypeLiteral(value: Type) extends Literal {
+    override def asValue: Value = value
+  }
+
+  object UnitLiteral extends Literal {
     override def value: Unit = ()
 
     override def asValue: UnitValue.type = UnitValue
@@ -70,6 +79,7 @@ object Expression {
 
     override def createArgumentList(mapping: ArgumentList): ArgumentList =
       mapping.withArgIdFor(this)
+
     override def asString: String = {
       posOpt match {
         case Some(pos) => s"_${pos}_"
@@ -80,17 +90,21 @@ object Expression {
     override def evaluate(runtime: ChowserRuntime, symbolTable: SymbolTable): Either[String, Value] = {
       symbolTable.argumentValues.getValueForExpression(id) match {
         case Some(value) => Right(value)
-        case None => Right(LambdaValue(this, 1))
+        case None => Right(LambdaValue(this))
       }
     }
   }
 
   object ArgExpression {
+
     case class ArgExpressionId(uuid: UUID)
+
     object ArgExpressionId {
       def createNew(): ArgExpressionId = ArgExpressionId(UUID.randomUUID())
     }
+
     def createNewSliding(): ArgExpression = ArgExpression(ArgExpressionId.createNew())(None)
+
     def createNewPinned(pos: Int): ArgExpression = ArgExpression(ArgExpressionId.createNew())(Some(pos))
   }
 
@@ -115,7 +129,7 @@ object Expression {
 
   def asStringMaybeParenthesized(expression: Expression): String = {
     expression match {
-      case literal: Literal[_] => literal.asString
+      case literal: Literal => literal.asString
       case identifierExpression: IdentifierExpression => identifierExpression.asString
       case _ => "(" + expression.asString + ")"
     }
@@ -123,15 +137,22 @@ object Expression {
 
   case class UnaryOpExpression(op: Operator, arg: Expression) extends Expression {
     def hasArguments: Boolean = arg.hasArguments
+
     def createArgumentList(mapping: ArgumentList): ArgumentList = arg.createArgumentList(mapping)
+
     override def evaluate(runtime: ChowserRuntime, symbolTable: SymbolTable): Either[String, Value] = {
       arg.evaluate(runtime, symbolTable) match {
         case failure: Left[String, Value] => failure
         case Right(argValue) =>
-          val opSig = UnitaryOpSig(Identifier(None, op.string), argValue.tpe)
-          symbolTable.unitaryOpTable.lookupDef(opSig) match {
-            case None => Left(s"No unary operator ${op.string} defined for argument type ${argValue.tpe}.")
-            case Some(opDef) => opDef.function(argValue)
+          argValue match {
+            case LambdaValue(expressionInsideLambda) =>
+              Right(LambdaValue(UnaryOpExpression(op, expressionInsideLambda)))
+            case _ =>
+              val opSig = UnitaryOpSig(Identifier(None, op.string), argValue.tpe)
+              symbolTable.unitaryOpTable.lookupDef(opSig) match {
+                case None => Left(s"No unary operator ${op.string} defined for argument type ${argValue.tpe}.")
+                case Some(opDef) => opDef.function(argValue)
+              }
           }
       }
     }
@@ -148,6 +169,7 @@ object Expression {
     def createArgumentList(argList: ArgumentList): ArgumentList = {
       rhs.createArgumentList(lhs.createArgumentList(argList))
     }
+
     override def evaluate(runtime: ChowserRuntime, symbolTable: SymbolTable): Either[String, Value] = {
       lhs.evaluate(runtime, symbolTable) match {
         case failure: Left[String, Value] => failure
@@ -155,12 +177,16 @@ object Expression {
           rhs.evaluate(runtime, symbolTable) match {
             case failure: Left[String, Value] => failure
             case Right(rhsValue) =>
-              val opSig = BinaryOpSig(Identifier(None, op.string), lhsValue.tpe, rhsValue.tpe)
-              symbolTable.binaryOpTable.lookupDef(opSig) match {
-                case None =>
-                  Left(s"No binary operator ${op.string} defined for argument types" +
-                    s" ${lhsValue.tpe.asString} and ${rhsValue.tpe.asString}.")
-                case Some(opDef) => opDef.function(lhsValue, rhsValue)
+              if (lhsValue.isLambdaValue || rhsValue.isLambdaValue) {
+                Right(LambdaValue(BinaryOpExpression(op, lhsValue.asExpression, rhsValue.asExpression)))
+              } else {
+                val opSig = BinaryOpSig(Identifier(None, op.string), lhsValue.tpe, rhsValue.tpe)
+                symbolTable.binaryOpTable.lookupDef(opSig) match {
+                  case None =>
+                    Left(s"No binary operator ${op.string} defined for argument types" +
+                      s" ${lhsValue.tpe.asString} and ${rhsValue.tpe.asString}.")
+                  case Some(opDef) => opDef.function(lhsValue, rhsValue)
+                }
               }
           }
       }
@@ -168,7 +194,7 @@ object Expression {
 
     override def asString: String = {
       val lhsString = asStringMaybeParenthesized(lhs)
-      val rhsString = asStringMaybeParenthesized(lhs)
+      val rhsString = asStringMaybeParenthesized(rhs)
       lhsString + op.string + rhsString
     }
   }
@@ -177,7 +203,7 @@ object Expression {
                    symbolTable: SymbolTable): Either[String, Seq[Value]] = {
     val expressionIter = expressions.iterator
     var failureOrValues: Either[String, Seq[Value]] = Right(Seq.empty)
-    while(expressionIter.hasNext && failureOrValues.isRight) {
+    while (expressionIter.hasNext && failureOrValues.isRight) {
       expressionIter.next().evaluate(runtime, symbolTable) match {
         case Right(value) => failureOrValues = failureOrValues.map(_ :+ value)
         case Left(message) => failureOrValues = Left(message)
@@ -191,7 +217,7 @@ object Expression {
 
     override def createArgumentList(argList: ArgumentList): ArgumentList = {
       var argListNew = argList
-      for(element <- elements) {
+      for (element <- elements) {
         argListNew = element.createArgumentList(argList)
       }
       argListNew
@@ -200,7 +226,12 @@ object Expression {
     override def evaluate(runtime: ChowserRuntime, symbolTable: SymbolTable): Either[String, Value] = {
       evaluateList(elements, runtime, symbolTable) match {
         case Left(message) => Left(message)
-        case Right(elementValues) => Right(TupleValue(elementValues))
+        case Right(elementValues) =>
+          if(elementValues.exists(_.isLambdaValue)) {
+            Right(LambdaValue(TupleExpression(elementValues.map(_.asExpression))))
+          } else {
+            Right(TupleValue(elementValues))
+          }
       }
     }
 
@@ -211,9 +242,10 @@ object Expression {
 
   case class CallExpression(args: Seq[Expression], identifier: Identifier) extends Expression {
     def hasArguments: Boolean = args.exists(_.hasArguments)
+
     override def createArgumentList(argList: ArgumentList): ArgumentList = {
       var argListNew = argList
-      for(arg <- args) {
+      for (arg <- args) {
         argListNew = arg.createArgumentList(argList)
       }
       argListNew
@@ -223,13 +255,16 @@ object Expression {
       evaluateList(args, runtime, symbolTable) match {
         case Left(message) => Left(message)
         case Right(argValues) =>
-          val argTypes = argValues.map(_.tpe)
-          val funSig = FunctionSig(identifier, argTypes)
-          val funRefOpt = symbolTable.functionTable.lookupDef(funSig)
-          funRefOpt match {
-            case None => Left(s"No function definition found for ${funSig}.")
-            case Some(funDef) => funDef.function(argValues)
-          }
+          if(argValues.exists(_.isLambdaValue)) {
+            Right(LambdaValue(CallExpression(argValues.map(_.asExpression), identifier)))
+          } else {
+            val argTypes = argValues.map(_.tpe)
+            val funSig = FunctionSig(identifier, argTypes)
+            val funRefOpt = symbolTable.functionTable.lookupDef(funSig)
+            funRefOpt match {
+              case None => Left(s"No function definition found for ${funSig}.")
+              case Some(funDef) => funDef.function(argValues)
+            }          }
       }
     }
 

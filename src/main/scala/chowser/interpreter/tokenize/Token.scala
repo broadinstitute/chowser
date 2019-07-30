@@ -77,20 +77,20 @@ object Token {
     def expression: Expression
   }
 
-  sealed trait LiteralToken[T] extends ExpressionToken {
-    def literal: Literal[T]
+  sealed trait LiteralToken extends ExpressionToken {
+    def literal: Literal
 
     override def expression: Expression = literal
   }
 
   case class IntLiteralToken(string: String, literal: IntLiteral, pos: Int, size: Int)
-    extends LiteralToken[Long]
+    extends LiteralToken
 
   case class FloatLiteralToken(string: String, literal: FloatLiteral, pos: Int, size: Int)
-    extends LiteralToken[Double]
+    extends LiteralToken
 
   case class StringLiteralToken(string: String, literal: StringLiteral, pos: Int, size: Int)
-    extends LiteralToken[String]
+    extends LiteralToken
 
   sealed trait SingleCharacterToken extends Token {
     def char: Char

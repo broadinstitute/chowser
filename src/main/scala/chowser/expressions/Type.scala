@@ -1,9 +1,15 @@
 package chowser.expressions
 
+import chowser.expressions.Expression.TypeLiteral
 import chowser.expressions.values.Value
 
 trait Type extends Value {
   override def tpe: TypeType.type = TypeType
+
+  override def asExpression: Expression = TypeLiteral(this)
+
+  override def isLambdaValue: Boolean = false
+
 }
 
 object TypeType extends Type {
