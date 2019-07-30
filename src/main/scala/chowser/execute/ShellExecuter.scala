@@ -1,7 +1,7 @@
 package chowser.execute
 
 import chowser.cmd.ShellCommand
-import chowser.expressions.{Context, Failure, Issue, Success}
+import chowser.expressions.Context
 import chowser.interpreter.ChowserInterpreter
 
 object ShellExecuter extends ChowserExecuter[ShellCommand.type] {
@@ -17,8 +17,8 @@ object ShellExecuter extends ChowserExecuter[ShellCommand.type] {
         case Left(message) => println(message)
         case Right(expression) =>
           expression.evaluate(context) match {
-            case Success(value) => println(value.asStringWithType)
-            case Failure(Issue(message)) => println(message)
+            case Right(value) => println(value.asStringWithType)
+            case Left(message) => println(message)
           }
       }
     }

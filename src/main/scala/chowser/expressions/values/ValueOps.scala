@@ -3,7 +3,7 @@ package chowser.expressions.values
 import chowser.expressions.defs.Def.BinaryOpDef
 import chowser.expressions.defs.Ref.BinaryOpRef
 import chowser.expressions.defs.Sig.BinaryOpSig
-import chowser.expressions.{Failure, FloatType, Identifier, IntType, Result, Success}
+import chowser.expressions.{FloatType, Identifier, IntType}
 
 object ValueOps {
 
@@ -15,10 +15,10 @@ object ValueOps {
         lhs match {
           case IntValue(lhsInt) =>
             rhs match {
-              case IntValue(rhsInt) => Success(IntValue(fun(rhsInt, lhsInt)))
-              case _ => Failure(s"Expected Int value, but got ${rhs.asStringWithType}.")
+              case IntValue(rhsInt) => Right(IntValue(fun(rhsInt, lhsInt)))
+              case _ => Left(s"Expected Int value, but got ${rhs.asStringWithType}.")
             }
-          case _ => Failure(s"Expected Int value, but got ${lhs.asStringWithType}.")
+          case _ => Left(s"Expected Int value, but got ${lhs.asStringWithType}.")
         }
       }
     BinaryOpDef(ref, valueFunction)
@@ -31,10 +31,10 @@ object ValueOps {
         lhs match {
           case FloatValue(lhsFloat) =>
             rhs match {
-              case FloatValue(rhsFloat) => Success(FloatValue(fun(rhsFloat, lhsFloat)))
-              case _ => Failure(s"Expected Float value, but got ${rhs.asStringWithType}.")
+              case FloatValue(rhsFloat) => Right(FloatValue(fun(rhsFloat, lhsFloat)))
+              case _ => Left(s"Expected Float value, but got ${rhs.asStringWithType}.")
             }
-          case _ => Failure(s"Expected Float value, but got ${lhs.asStringWithType}.")
+          case _ => Left(s"Expected Float value, but got ${lhs.asStringWithType}.")
         }
       }
     BinaryOpDef(ref, valueFunction)

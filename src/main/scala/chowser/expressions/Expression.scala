@@ -14,7 +14,7 @@ trait Expression {
 
   def asString: String
 
-  def evaluate(context: Context): Result
+  def evaluate(context: Context): Either[String, Value]
 }
 
 object Expression {
@@ -28,9 +28,9 @@ object Expression {
   object Exit extends Expression {
     def hasArguments: Boolean = false
     def createArgumentList(mapping: ArgumentList): ArgumentList = mapping
-    override def evaluate(context: Context): Result = {
+    override def evaluate(context: Context): Either[String, Value] = {
       context.exitIsRequested = true
-      Success(UnitValue)
+      Right(UnitValue)
     }
 
     override def asString: String = "exit()"
@@ -43,7 +43,7 @@ object Expression {
 
     def value: T
 
-    override def evaluate(context: Context): Result = Success(asValue)
+    override def evaluate(context: Context): Right[String, Value] = Right(asValue)
 
     override def asString: String = asValue.asString
   }
@@ -78,7 +78,7 @@ object Expression {
       }
     }
 
-    override def evaluate(context: Context): Result = ???
+    override def evaluate(context: Context): Either[String, Value] = ???
   }
 
   object ArgExpression {
@@ -95,12 +95,12 @@ object Expression {
 
     def createArgumentList(mapping: ArgumentList): ArgumentList = mapping
 
-    override def evaluate(context: Context): Result = {
+    override def evaluate(context: Context): Either[String, Value] = {
       val sig = ScalarSig(identifier)
       context.symbolTable.scalarTable.lookupRef(sig) match {
-        case None => Failure(s"Unknown identifier ${identifier.asString}")
+        case None => Left(s"Unknown identifier ${identifier.asString}")
         case Some(_) => context.symbolTable.scalarTable.lookupDef(sig) match {
-          case None => Failure(s"${identifier.asString} has not been initialized")
+          case None => Left(s"${identifier.asString} has not been initialized")
           case Some(myDef) => myDef.result
         }
       }
@@ -120,13 +120,13 @@ object Expression {
   case class UnaryOpExpression(op: Operator, arg: Expression) extends Expression {
     def hasArguments: Boolean = arg.hasArguments
     def createArgumentList(mapping: ArgumentList): ArgumentList = arg.createArgumentList(mapping)
-    override def evaluate(context: Context): Result = {
+    override def evaluate(context: Context): Either[String, Value] = {
       arg.evaluate(context) match {
-        case failure: Failure => failure
-        case Success(argValue) =>
+        case failure: Left[String, Value] => failure
+        case Right(argValue) =>
           val opSig = UnitaryOpSig(Identifier(None, op.string), argValue.tpe)
           context.symbolTable.unitaryOpTable.lookupDef(opSig) match {
-            case None => Failure(s"No unary operator ${op.string} defined for argument type ${argValue.tpe}.")
+            case None => Left(s"No unary operator ${op.string} defined for argument type ${argValue.tpe}.")
             case Some(opDef) => opDef.function(argValue)
           }
       }
@@ -144,17 +144,17 @@ object Expression {
     def createArgumentList(argList: ArgumentList): ArgumentList = {
       rhs.createArgumentList(lhs.createArgumentList(argList))
     }
-    override def evaluate(context: Context): Result = {
+    override def evaluate(context: Context): Either[String, Value] = {
       lhs.evaluate(context) match {
-        case failure: Failure => failure
-        case Success(lhsValue) =>
+        case failure: Left[String, Value] => failure
+        case Right(lhsValue) =>
           rhs.evaluate(context) match {
-            case failure: Failure => failure
-            case Success(rhsValue) =>
+            case failure: Left[String, Value] => failure
+            case Right(rhsValue) =>
               val opSig = BinaryOpSig(Identifier(None, op.string), lhsValue.tpe, rhsValue.tpe)
               context.symbolTable.binaryOpTable.lookupDef(opSig) match {
                 case None =>
-                  Failure(s"No binary operator ${op.string} defined for argument types" +
+                  Left(s"No binary operator ${op.string} defined for argument types" +
                     s" ${lhsValue.tpe.asString} and ${rhsValue.tpe.asString}.")
                 case Some(opDef) => opDef.function(lhsValue, rhsValue)
               }
@@ -169,6 +169,18 @@ object Expression {
     }
   }
 
+  def evaluateList(expressions: Seq[Expression], context: Context): Either[String, Seq[Value]] = {
+    val expressionIter = expressions.iterator
+    var failureOrValues: Either[String, Seq[Value]] = Right(Seq.empty)
+    while(expressionIter.hasNext && failureOrValues.isRight) {
+      expressionIter.next().evaluate(context) match {
+        case Right(value) => failureOrValues = failureOrValues.map(_ :+ value)
+        case Left(message) => failureOrValues = Left(message)
+      }
+    }
+    failureOrValues
+  }
+
   case class TupleExpression(elements: Seq[Expression]) extends Expression {
     def hasArguments: Boolean = elements.exists(_.hasArguments)
 
@@ -180,19 +192,10 @@ object Expression {
       argListNew
     }
 
-    override def evaluate(context: Context): Result = {
-      val elementIter = elements.iterator
-      var values: Seq[Value] = Seq.empty
-      var failureOpt: Option[Failure] = None
-      while (failureOpt.isEmpty && elementIter.hasNext) {
-        elementIter.next().evaluate(context) match {
-          case Success(value) => values :+= value
-          case failure: Failure => failureOpt = Some(failure)
-        }
-      }
-      failureOpt match {
-        case Some(failure) => failure
-        case None => Success(TupleValue(values))
+    override def evaluate(context: Context): Either[String, Value] = {
+      evaluateList(elements, context) match {
+        case Left(message) => Left(message)
+        case Right(elementValues) => Right(TupleValue(elementValues))
       }
     }
 
@@ -211,24 +214,15 @@ object Expression {
       argListNew
     }
 
-    override def evaluate(context: Context): Result = {
-      val argIter = args.iterator
-      var argValues: Seq[Value] = Seq.empty
-      var failureOpt: Option[Failure] = None
-      while (failureOpt.isEmpty && argIter.hasNext) {
-        argIter.next().evaluate(context) match {
-          case Success(value) => argValues :+= value
-          case failure: Failure => failureOpt = Some(failure)
-        }
-      }
-      failureOpt match {
-        case Some(failure) => failure
-        case None =>
+    override def evaluate(context: Context): Either[String, Value] = {
+      evaluateList(args, context) match {
+        case Left(message) => Left(message)
+        case Right(argValues) =>
           val argTypes = argValues.map(_.tpe)
           val funSig = FunctionSig(identifier, argTypes)
           val funRefOpt = context.symbolTable.functionTable.lookupDef(funSig)
           funRefOpt match {
-            case None => Failure(s"No function definition found for ${funSig}.")
+            case None => Left(s"No function definition found for ${funSig}.")
             case Some(funDef) => funDef.function(argValues)
           }
       }
