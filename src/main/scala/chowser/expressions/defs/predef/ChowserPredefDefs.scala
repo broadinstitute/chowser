@@ -1,17 +1,16 @@
 package chowser.expressions.defs.predef
 
-import chowser.expressions.defs.DefTable.BasicDefTable
-import chowser.expressions.defs.SymbolTable
 import chowser.expressions.defs.SymbolTable._
+import chowser.expressions.defs.{DefTable, SymbolTable}
 import chowser.expressions.values.ValueOps.{floatBinary, intBinary}
 
 object ChowserPredefDefs {
 
-  val scalarTable: BasicScalarTable = BasicDefTable.empty
+  val scalarTable: ScalarTable = DefTable.empty
 
-  val unitaryOpTable: BasicUnitaryOpTable = BasicDefTable.empty
+  val unitaryOpTable: UnitaryOpTable = DefTable.empty
 
-  val binaryOpTable: BasicBinaryOpTable = BasicDefTable(Set(
+  val binaryOpTable: BinaryOpTable = DefTable(Set(
     intBinary("+", _ + _),
     intBinary("-", _ - _),
     intBinary("*", _ * _),
@@ -22,8 +21,8 @@ object ChowserPredefDefs {
     floatBinary("/", _ / _)
   ))
 
-  val functionTable: BasicFunctionTable = BasicDefTable.empty
+  val functionTable: FunctionTable = DefTable.empty
 
-  val registry: SymbolTable = BasicSymbolTable(scalarTable, unitaryOpTable, binaryOpTable, functionTable)
+  val symbolTable: SymbolTable = SymbolTable(scalarTable, unitaryOpTable, binaryOpTable, functionTable)
 
 }

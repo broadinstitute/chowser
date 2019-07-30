@@ -33,3 +33,7 @@ case class ArgumentList(argIds: Seq[ArgId], argIdByExpression: Map[ArgExpression
   }
 
 }
+
+object ArgumentList {
+  def empty: ArgumentList = ArgumentList(Seq.empty, Map.empty)
+}

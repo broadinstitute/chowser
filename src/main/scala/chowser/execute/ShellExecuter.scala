@@ -1,7 +1,8 @@
 package chowser.execute
 
 import chowser.cmd.ShellCommand
-import chowser.expressions.Context
+import chowser.expressions.defs.predef.ChowserPredefDefs
+import chowser.expressions.{ChowserRuntime, Context}
 import chowser.interpreter.ChowserInterpreter
 
 object ShellExecuter extends ChowserExecuter[ShellCommand.type] {
@@ -10,13 +11,15 @@ object ShellExecuter extends ChowserExecuter[ShellCommand.type] {
   def execute(): Result = {
     println("Welcome to ChowserShell!")
     val context = Context.predef
-    while(!context.exitIsRequested) {
+    val runtime = new ChowserRuntime
+    val symbolTable = ChowserPredefDefs.symbolTable
+    while(!runtime.exitIsRequested) {
       print("chowser> ")
       val input = Console.in.readLine()
       ChowserInterpreter.interpretString(input) match {
         case Left(message) => println(message)
         case Right(expression) =>
-          expression.evaluate(context) match {
+          expression.evaluate(runtime, symbolTable) match {
             case Right(value) => println(value.asStringWithType)
             case Left(message) => println(message)
           }

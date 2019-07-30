@@ -8,5 +8,5 @@ class Context(var symbolTable: SymbolTable) {
 }
 
 object Context {
-  def predef: Context = new Context(ChowserPredefDefs.registry)
+  def predef: Context = new Context(ChowserPredefDefs.symbolTable)
 }
