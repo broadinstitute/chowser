@@ -68,6 +68,12 @@ object ChowserReduceRules {
       Right(LSeq(lTail, multiTupleUnfinished.closeBy(term, close)))
   }
 
+  val tupleMaker: Rule = {
+    case
+      State(LSeq(LSeq(lTail, expression: ExpressionToken), unfinishedTupleMaking: UnfinishedTupleMakingToken), _)
+      => Right(LSeq(lTail, unfinishedTupleMaking.prependArg(expression)))
+  }
+
   val termInParens: Rule = {
     case State(LSeq(lTail, OneTupleToken(open, term, close)),  _) =>
       Right(LSeq(lTail, BracketedTermToken(open, term, close)))
@@ -80,6 +86,6 @@ object ChowserReduceRules {
 
   val all: Rule =
     skipWhiteSpace orElse unaryOp orElse binaryOp orElse memberSelection orElse unit orElse oneTuple orElse
-      multiTupleStart orElse multiTupleExtend orElse multiTupleClose orElse termInParens orElse call
+      multiTupleStart orElse multiTupleExtend orElse multiTupleClose orElse tupleMaker orElse termInParens orElse call
 
 }

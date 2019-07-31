@@ -92,6 +92,47 @@ object Token {
   case class StringLiteralToken(string: String, literal: StringLiteral, pos: Int, size: Int)
     extends LiteralToken
 
+  sealed trait TupleMakingToken extends Token {
+    def args: Seq[ExpressionToken]
+
+    def tupleMaker: TupleMakerToken
+  }
+
+  sealed trait UnfinishedTupleMakingToken extends TupleMakingToken {
+    def prependArg(arg: ExpressionToken): TupleMakingToken = {
+      val argsNew = arg +: args
+      if (argsNew.size == tupleMaker.wantsToAbsorb) {
+        TupleMakingExpressionToken(argsNew, tupleMaker)
+      } else {
+        PartialTupleMakingToken(argsNew, tupleMaker)
+      }
+    }
+
+    def wantsToAbsorb: Int
+  }
+
+  case class TupleMakerToken(string: String, pos: Int, size: Int) extends UnfinishedTupleMakingToken {
+    override def args: Seq[ExpressionToken] = Seq.empty
+
+    override def tupleMaker: TupleMakerToken = this
+
+    override def wantsToAbsorb: Int = size - 2
+  }
+
+  case class PartialTupleMakingToken(args: Seq[ExpressionToken], tupleMaker: TupleMakerToken)
+    extends CompositeToken with UnfinishedTupleMakingToken {
+    override def children: Seq[Token] = args :+ tupleMaker
+
+    override def wantsToAbsorb: Int = tupleMaker.wantsToAbsorb - args.size
+  }
+
+  case class TupleMakingExpressionToken(args: Seq[ExpressionToken], tupleMaker: TupleMakerToken)
+    extends TupleMakingToken with CompositeToken with ExpressionToken {
+    override def children: Seq[Token] = args :+ tupleMaker
+
+    override def expression: Expression = TupleExpression(args.map(_.expression))
+  }
+
   sealed trait SingleCharacterToken extends Token {
     def char: Char
 

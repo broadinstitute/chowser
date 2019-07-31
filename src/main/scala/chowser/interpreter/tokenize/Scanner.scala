@@ -227,9 +227,31 @@ object Scanner {
     }
   }
 
+  object TupleMakerScanner extends Scanner {
+    override def scan(state: ScanState): Result = {
+      val remainder = state.remainder
+      if(remainder.size > 2 && remainder.charAt(0) == '(') {
+        val closePos = remainder.indexOf(')')
+        if(closePos > 1) {
+          val enclosed = remainder.substring(1, closePos)
+          if(enclosed.forall(_ == '$')) {
+            val string = remainder.substring(0, closePos + 1)
+            Success(state.addToken(TupleMakerToken(string, state.pos, closePos + 1)))
+          } else {
+            Untriggered
+          }
+        } else {
+          Untriggered
+        }
+      } else {
+        Untriggered
+      }
+    }
+  }
+
   val namedsScanner = CombinedScanner(IdentifierScanner, OperatorScanner)
   val literalsScanner = CombinedScanner(IntScanner, FloatScanner, StringScanner)
-  val miscScanner = CombinedScanner(DefinitionScanner, SingleCharacterScanner)
+  val miscScanner = CombinedScanner(TupleMakerScanner, DefinitionScanner, SingleCharacterScanner)
   val chowserScanner =
     CombinedScanner(
       WhiteSpaceScanner, namedsScanner, literalsScanner, miscScanner
