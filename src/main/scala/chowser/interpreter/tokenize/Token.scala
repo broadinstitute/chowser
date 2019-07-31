@@ -191,6 +191,10 @@ object Token {
     override def char: Char = '.'
   }
 
+  case class HashToken(pos: Int) extends SingleCharacterToken {
+    override def char: Char = '#'
+  }
+
   val singleCharacterTokenGenerators: Map[Char, Int => SingleCharacterToken] = Map(
     '(' -> OpenParenToken,
     '{' -> OpenBraceToken,
@@ -199,7 +203,8 @@ object Token {
     ',' -> CommaToken,
     ':' -> ColonToken,
     ';' -> SemicolonToken,
-    '.' -> DotToken
+    '.' -> DotToken,
+    '#' -> HashToken
   )
 
   trait CompositeToken extends Token {
@@ -287,6 +292,21 @@ object Token {
     override def expression: Expression = ???
 
     override def children: Seq[Token] = ???
+  }
+
+  case class ConcatToken(lhs: ExpressionToken, hash: HashToken, rhs: ExpressionToken)
+    extends ExpressionToken with CompositeToken {
+    private def asTupleArgs(expression: Expression): Seq[Expression] = {
+      expression match {
+        case tupleExpression: TupleExpression => tupleExpression.elements
+        case _ => Seq(expression)
+      }
+    }
+    override def expression: Expression = {
+      TupleExpression(asTupleArgs(lhs.expression) ++ asTupleArgs(rhs.expression))
+    }
+
+    override def children: Seq[Token] = Seq(lhs, hash, rhs)
   }
 
 }

@@ -79,6 +79,12 @@ object ChowserReduceRules {
       Right(LSeq(lTail, BracketedTermToken(open, term, close)))
   }
 
+  val concat: Rule = {
+    case State(LSeq(LSeq(LSeq(lTail, lhs: ExpressionToken), hash: HashToken), rhs: ExpressionToken), _)
+    =>
+      Right(LSeq(lTail, ConcatToken(lhs, hash, rhs)))
+  }
+
   val call: Rule = {
     case State(LSeq(LSeq(lTail, term: TermToken), callable: CallableToken), _) =>
       Right(LSeq(lTail, CallTokenOld(term, callable)))
@@ -86,6 +92,7 @@ object ChowserReduceRules {
 
   val all: Rule =
     skipWhiteSpace orElse unaryOp orElse binaryOp orElse memberSelection orElse unit orElse oneTuple orElse
-      multiTupleStart orElse multiTupleExtend orElse multiTupleClose orElse tupleMaker orElse termInParens orElse call
+      multiTupleStart orElse multiTupleExtend orElse multiTupleClose orElse tupleMaker orElse termInParens orElse
+      concat orElse call
 
 }
