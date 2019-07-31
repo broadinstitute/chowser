@@ -86,8 +86,8 @@ object ChowserReduceRules {
   }
 
   val call: Rule = {
-    case State(LSeq(LSeq(lTail, term: TermToken), callable: CallableToken), _) =>
-      Right(LSeq(lTail, CallTokenOld(term, callable)))
+    case State(LSeq(LSeq(lTail, arg: ExpressionToken), function: ExpressionToken), _) =>
+      Right(LSeq(lTail, CallToken(arg, function)))
   }
 
   val all: Rule =

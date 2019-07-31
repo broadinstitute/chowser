@@ -22,7 +22,6 @@ object Reducer {
             case None => keepGoing = false
           }
       }
-      println(state.asString)
     }
     Result(state.lhs.tokens, errors)
   }

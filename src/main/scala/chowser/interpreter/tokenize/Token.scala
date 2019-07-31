@@ -1,6 +1,6 @@
 package chowser.interpreter.tokenize
 
-import chowser.expressions.Expression.{ArgExpression, BinaryOpExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, TupleExpression, UnaryOpExpression, UnitLiteral}
+import chowser.expressions.Expression.{ArgExpression, BinaryOpExpression, CallExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, TupleExpression, UnaryOpExpression, UnitLiteral}
 import chowser.expressions.{Expression, Identifier, Operator}
 import chowser.util.NumberParser
 
@@ -283,11 +283,11 @@ object Token {
     override def expression: Expression = TupleExpression(elementTokens.map(_.expression))
   }
 
-  case class CallTokenOld(term: TermToken, callable: CallableToken) extends TermToken with CompositeToken {
+  case class CallTokenOldOld(term: TermToken, callable: CallableToken) extends TermToken with CompositeToken {
     override def children: Seq[Token] = Seq(term, callable)
   }
 
-  case class CallToken(args: Seq[ExpressionToken], identifier: IdentifierToken)
+  case class CallTokenOld(args: Seq[ExpressionToken], identifier: IdentifierToken)
     extends ExpressionToken with CompositeToken {
     override def expression: Expression = ???
 
@@ -307,6 +307,13 @@ object Token {
     }
 
     override def children: Seq[Token] = Seq(lhs, hash, rhs)
+  }
+
+  case class CallToken(arg: ExpressionToken, function: ExpressionToken)
+    extends CompositeToken with ExpressionToken {
+    override def children: Seq[Token] = Seq(arg, function)
+
+    override def expression: CallExpression = CallExpression(arg.expression, function.expression)
   }
 
 }

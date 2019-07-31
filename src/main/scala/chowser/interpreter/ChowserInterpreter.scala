@@ -18,10 +18,7 @@ object ChowserInterpreter {
         state = state.scanned(scanner)
         count += 1
       }
-      println(state.asString)
-      if(state.isComplete) {
-        println("Tokenization complete.")
-      } else if(state.hasFailed) {
+      if(state.hasFailed) {
         println("Tokenization has failed.")
       }
       val reduceResult = Reducer.reduce(state.tokens, ChowserReduceRules.all)
@@ -29,8 +26,6 @@ object ChowserInterpreter {
         println("Error(s) during reduction")
         println(reduceResult.errors.mkString("\n"))
       }
-      println(reduceResult.tokens.map(_.string).mkString("|"))
-      println(reduceResult)
       if(reduceResult.errors.nonEmpty) {
         Left("Could not parse\n" + reduceResult.errors.mkString("\n"))
       } else {
@@ -38,7 +33,7 @@ object ChowserInterpreter {
           if(reduceResult.tokens.isEmpty) {
             Left("Found no parsable tokens.")
           } else {
-            Left("Superflous tokens " + reduceResult.tokens.tail.map(_.string).mkString(""))
+            Left("Superflous tokens " + reduceResult.tokens.tail.map(_.string).mkString(" "))
           }
         } else {
           reduceResult.tokens.head match {
@@ -52,5 +47,4 @@ object ChowserInterpreter {
       }
     }
   }
-
 }

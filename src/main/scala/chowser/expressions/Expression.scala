@@ -240,8 +240,16 @@ object Expression {
     }
   }
 
-  case class CallExpression(args: Seq[Expression], identifier: Identifier) extends Expression {
-    def hasArguments: Boolean = args.exists(_.hasArguments)
+  case class CallExpression(arg: Expression, function: Expression) extends Expression {
+    def hasArguments: Boolean = arg.hasArguments
+
+    def args: Seq[Expression] = {
+      arg match {
+        case TupleExpression(elements) => elements
+        case UnitLiteral => Seq()
+        case _ => Seq(arg)
+      }
+    }
 
     override def createArgumentList(argList: ArgumentList): ArgumentList = {
       var argListNew = argList
@@ -256,20 +264,34 @@ object Expression {
         case Left(message) => Left(message)
         case Right(argValues) =>
           if(argValues.exists(_.isLambdaValue)) {
-            Right(LambdaValue(CallExpression(argValues.map(_.asExpression), identifier)))
+            val argNew = argValues match {
+              case Seq() => UnitLiteral
+              case Seq(value) => value.asExpression
+              case _ => TupleExpression(argValues.map(_.asExpression))
+            }
+            Right(LambdaValue(CallExpression(argNew, function)))
           } else {
-            val argTypes = argValues.map(_.tpe)
-            val funSig = FunctionSig(identifier, argTypes)
-            val funRefOpt = symbolTable.functionTable.lookupDef(funSig)
-            funRefOpt match {
-              case None => Left(s"No function definition found for ${funSig}.")
-              case Some(funDef) => funDef.function(argValues)
-            }          }
+            function match {
+              case identifierExpression: IdentifierExpression =>
+                val identifier = identifierExpression.identifier
+                val argTypes = argValues.map(_.tpe)
+                val funSig = FunctionSig(identifier, argTypes)
+                val funRefOpt = symbolTable.functionTable.lookupDef(funSig)
+                funRefOpt match {
+                  case None => Left(s"No function definition found for ${funSig}.")
+                  case Some(funDef) => funDef.function(argValues)
+                }
+              case _ =>
+                val argumentList = function.createArgumentList(ArgumentList.empty)
+                val argumentValues = ArgumentValues.create(argumentList, argValues)
+                function.evaluate(runtime, symbolTable.withArgumentValues(argumentValues))
+            }
+          }
       }
     }
 
     override def asString: String = {
-      args.map(asStringMaybeParenthesized).mkString(" ") + " " + identifier.asString
+      args.map(asStringMaybeParenthesized).mkString(" ") + " " + function.asString
     }
   }
 
