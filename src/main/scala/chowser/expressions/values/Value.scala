@@ -37,6 +37,16 @@ case class IntValue(value: Long) extends Value {
   override def isLambdaValue: Boolean = false
 }
 
+case class BoolValue(value: Boolean) extends Value {
+  override def tpe: BoolType.type = BoolType
+
+  override def asString: String = value.toString
+
+  override def asExpression: BoolLiteral = BoolLiteral(value)
+
+  override def isLambdaValue: Boolean = false
+}
+
 case class FloatValue(value: Double) extends Value {
   override def tpe: FloatType.type = FloatType
 

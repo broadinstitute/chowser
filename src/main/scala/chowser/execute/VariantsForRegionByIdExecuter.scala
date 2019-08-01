@@ -3,13 +3,13 @@ package chowser.execute
 import chowser.cmd.VariantsForRegionByIdCommand
 import chowser.filter.{Filter, RowFilters}
 import chowser.genomics.{Region, VariantId}
-import chowser.tsv.{TsvReader, TsvUtils}
+import chowser.tsv.{BasicTsvReader, TsvUtils}
 
 object VariantsForRegionByIdExecuter extends ChowserExecuter[VariantsForRegionByIdCommand] {
   override def execute(command: VariantsForRegionByIdCommand): ChowserExecuter.Result[VariantsForRegionByIdCommand] = {
     import command.{idColName, inFile, outFile, region}
     val rowFilter = RowFilters.ForCol(idColName, VariantInRegionFilter(region))
-    TsvUtils.filterRows(inFile, outFile, TsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
     Result(command, success = true)
   }
 

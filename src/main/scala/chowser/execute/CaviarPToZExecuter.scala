@@ -1,14 +1,14 @@
 package chowser.execute
 
 import chowser.cmd.CaviarPToZCommand
-import chowser.tsv.TsvReader
+import chowser.tsv.BasicTsvReader
 import chowser.util.{MathUtils, NumberParser}
 
 object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
 
   def execute(command: CaviarPToZCommand): Result = {
     import command.{idCol, inFile, outFile, pCol}
-    val reader = TsvReader.forSimpleHeaderLine(inFile)
+    val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
     if (outFile.nonEmpty) {
       outFile.clear()
     }

@@ -9,7 +9,7 @@ case class Operator(string: String) {
 }
 
 object Operator {
-  val chars: Set[Char] = "+-=*/\\&%$@^|!~".toSet
+  val chars: Set[Char] = "+-=*/\\&%$@^|!~<>".toSet
 
   val unaryPrefixOpInitials: Set[Char] = "+-~!".toSet
 

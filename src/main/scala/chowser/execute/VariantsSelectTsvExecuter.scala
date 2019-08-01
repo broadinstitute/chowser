@@ -2,8 +2,8 @@ package chowser.execute
 
 import chowser.cmd.VariantsSelectTsvCommand
 import chowser.genomics.VariantGroupId
-import chowser.tsv.{TsvReader, TsvUtils}
-import chowser.tsv.TsvReader.Row
+import chowser.tsv.{BasicTsvReader, TsvUtils}
+import chowser.tsv.BasicTsvReader.Row
 
 object VariantsSelectTsvExecuter extends ChowserExecuter[VariantsSelectTsvCommand] {
 
@@ -16,7 +16,7 @@ object VariantsSelectTsvExecuter extends ChowserExecuter[VariantsSelectTsvComman
         case _ => false
       }
     }
-    val readerData = TsvReader.forSimpleHeaderLine(dataFile)
+    val readerData = BasicTsvReader.forSimpleHeaderLine(dataFile)
     if (outFile.nonEmpty) {
       outFile.clear()
     }

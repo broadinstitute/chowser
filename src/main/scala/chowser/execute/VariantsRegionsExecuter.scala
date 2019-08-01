@@ -1,7 +1,7 @@
 package chowser.execute
 
 import chowser.cmd.VariantsRegionsCommand
-import chowser.tsv.{TsvReader, TsvWriter}
+import chowser.tsv.{BasicTsvReader, TsvWriter}
 import chowser.util.intervals.{CanonicalIntervals, Interval}
 
 object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
@@ -11,7 +11,7 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
 
   def execute(command: VariantsRegionsCommand): Result = {
     import command.{inFile, outFile, chromColName, posColName, radius }
-    val rowIterator = TsvReader.forSimpleHeaderLine(inFile)
+    val rowIterator = BasicTsvReader.forSimpleHeaderLine(inFile)
     var regionsByChromosome: Map[String, CanonicalIntervals] = Map.empty
     for(row <- rowIterator) {
       val chromosome = row.string(chromColName)

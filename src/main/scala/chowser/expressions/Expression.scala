@@ -56,6 +56,10 @@ object Expression {
     override def asValue: IntValue = IntValue(value)
   }
 
+  case class BoolLiteral(value: Boolean) extends Literal {
+    override def asValue: BoolValue = BoolValue(value)
+  }
+
   case class FloatLiteral(value: Double) extends Literal {
     override def asValue: FloatValue = FloatValue(value)
   }

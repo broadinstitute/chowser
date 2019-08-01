@@ -2,7 +2,7 @@ package chowser.execute
 
 import better.files.File
 import chowser.cmd.VariantsRegionsCommand
-import chowser.tsv.{TsvReader, TsvWriter}
+import chowser.tsv.{BasicTsvReader, TsvWriter}
 import org.scalatest.FunSuite
 
 class VariantsRegionsExecuterTest extends FunSuite {
@@ -48,7 +48,7 @@ class VariantsRegionsExecuterTest extends FunSuite {
     val command = VariantsRegionsCommand(inFile, outFile, chromColName, posColName, radius)
     val result = VariantsRegionsExecuter.execute(command)
     assert(result.success)
-    val reReader = TsvReader.forSimpleHeaderLine(outFile)
+    val reReader = BasicTsvReader.forSimpleHeaderLine(outFile)
     val rows = reReader.toSeq
     val chromosomes = rows.map(row => row.valueMap(chromColName))
     assert(chromosomes == Seq("1", "1", "3", "X"))

@@ -2,7 +2,7 @@ package chowser.genomics
 
 import better.files.File
 import chowser.genomics.VariantId.coordinateDividerRegex
-import chowser.tsv.{TsvReader, TsvWriter}
+import chowser.tsv.{BasicTsvReader, TsvWriter}
 import chowser.util.NumberParser
 import htsjdk.variant.variantcontext.VariantContext
 
@@ -67,7 +67,7 @@ object VariantGroupId {
   }
 
   class VariantGroupIdTsvReader(val idKey: String)(val file: File) extends Iterator[VariantGroupId] {
-    val tsvReader: TsvReader = TsvReader.forSimpleHeaderLine(file)
+    val tsvReader: BasicTsvReader = BasicTsvReader.forSimpleHeaderLine(file)
 
     val delegate: Iterator[VariantGroupId] =
       tsvReader.map(_.valueMap).map(_.get(idKey)).collect {

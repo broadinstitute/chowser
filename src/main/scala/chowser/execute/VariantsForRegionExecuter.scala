@@ -3,7 +3,7 @@ package chowser.execute
 import chowser.cmd.VariantsForRegionCommand
 import chowser.filter.{Filter, RowFilters, StringFilters}
 import chowser.genomics.Chromosome
-import chowser.tsv.{TsvReader, TsvUtils}
+import chowser.tsv.{BasicTsvReader, TsvUtils}
 
 object VariantsForRegionExecuter extends ChowserExecuter[VariantsForRegionCommand] {
   override def execute(command: VariantsForRegionCommand): ChowserExecuter.Result[VariantsForRegionCommand] = {
@@ -12,7 +12,7 @@ object VariantsForRegionExecuter extends ChowserExecuter[VariantsForRegionComman
       RowFilters.ForCol(chromColName, ChromosomeFilter(region.chromosome)) &&
         RowFilters.ForCol(posColName, StringFilters.parseAsUnsignedIntegerAndFilter(_ >= region.start)) &&
         RowFilters.ForCol(posColName, StringFilters.parseAsUnsignedIntegerAndFilter(_ < region.end))
-    TsvUtils.filterRows(inFile, outFile, TsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
     Result(command, success = true)
   }
 

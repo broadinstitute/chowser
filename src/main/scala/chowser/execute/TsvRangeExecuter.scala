@@ -2,14 +2,14 @@ package chowser.execute
 
 import chowser.cmd.TsvRangeCommand
 import chowser.filter.{RowFilters, StringFilters}
-import chowser.tsv.{TsvReader, TsvUtils}
+import chowser.tsv.{BasicTsvReader, TsvUtils}
 
 object TsvRangeExecuter extends ChowserExecuter[TsvRangeCommand] {
 
   def execute(command: TsvRangeCommand): Result = {
     import command.{inFile, outFile, colName, filter}
     val rowFilter = RowFilters.ForCol(colName, StringFilters.parsesAsDoubleAndFilter(filter))
-    TsvUtils.filterRows(inFile, outFile, TsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
     Result(command, success = true)
   }
 

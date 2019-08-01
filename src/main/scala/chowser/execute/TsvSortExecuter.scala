@@ -1,13 +1,13 @@
 package chowser.execute
 
 import chowser.cmd.TsvSortCommand
-import chowser.tsv.{TsvReader, TsvUtils}
+import chowser.tsv.{BasicTsvReader, TsvUtils}
 
 object TsvSortExecuter extends ChowserExecuter[TsvSortCommand] {
 
   def execute(command: TsvSortCommand): Result = {
     import command.{colName, inFile, outFile}
-    TsvUtils.sortRowsByCol(inFile, outFile, TsvReader.forSimpleHeaderLine(_), colName)
+    TsvUtils.sortRowsByCol(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), colName)
     Result(command, success = true)
   }
 

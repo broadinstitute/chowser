@@ -2,7 +2,7 @@ package chowser.execute
 
 import better.files.File
 import chowser.cmd.TsvMatrixCommand
-import chowser.tsv.{TsvReader, TsvWriter}
+import chowser.tsv.{BasicTsvReader, TsvWriter}
 import htsjdk.variant.vcf.VCFFileReader
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
@@ -14,7 +14,7 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
     val vcfReader = new VCFFileReader(idsFile.path, false)
     val idList = vcfReader.iterator().asScala.map(_.getContig).toSeq
     val matrix = new Matrix(idList, "0.0")
-    val valueReader = TsvReader.forSimpleHeaderLine(valuesFile)
+    val valueReader = BasicTsvReader.forSimpleHeaderLine(valuesFile)
     valueReader.foreach { row =>
       matrix.put(row.string(idCol1), row.string(idCol2), row.string(valueCol))
     }

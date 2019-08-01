@@ -1,13 +1,13 @@
 package chowser.execute
 
 import chowser.cmd.TsvExtractUniqueCommand
-import chowser.tsv.{TsvReader, TsvUtils}
+import chowser.tsv.{BasicTsvReader, TsvUtils}
 
 object TsvExtractUniqueExecuter extends ChowserExecuter[TsvExtractUniqueCommand] {
 
   def execute(command: TsvExtractUniqueCommand): Result = {
     import command.{colName, inFile, outFile}
-    TsvUtils.extractUniqueValues(inFile, outFile, TsvReader.forSimpleHeaderLine(_), colName)
+    TsvUtils.extractUniqueValues(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), colName)
     Result(command, success = true)
   }
 

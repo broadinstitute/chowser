@@ -4,11 +4,11 @@ import better.files.File
 import chowser.execute.ExecutionUtils
 import chowser.filter.Filter
 import chowser.genomics.VariantGroupId
-import chowser.tsv.TsvReader.Row
+import chowser.tsv.BasicTsvReader.Row
 
 object TsvUtils {
 
-  def filterRows(inFile: File, outFile: File, readerGenerator: File => TsvReader, filter: Filter[Row]): Unit = {
+  def filterRows(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, filter: Filter[Row]): Unit = {
     val reader = readerGenerator(inFile)
     if (outFile.nonEmpty) {
       outFile.clear()
@@ -17,7 +17,7 @@ object TsvUtils {
     reader.filter(filter).map(_.line).foreach(outFile.appendLine(_))
   }
 
-  def sortRowsByCol(inFile: File, outFile: File, readerGenerator: File => TsvReader, colName: String): Unit = {
+  def sortRowsByCol(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
     val reader = readerGenerator(inFile)
     val colIndex = reader.cols.indexOf(colName)
     if (colIndex < 0) {
@@ -34,7 +34,7 @@ object TsvUtils {
     ExecutionUtils.runBashScript(commandString)
   }
 
-  def extractUniqueValues(inFile: File, outFile: File, readerGenerator: File => TsvReader, colName: String): Unit = {
+  def extractUniqueValues(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
     val reader = readerGenerator(inFile)
     val colIndex = reader.cols.indexOf(colName)
     if (colIndex < 0) {
@@ -52,7 +52,7 @@ object TsvUtils {
   }
 
   def loadVariantGroupIds(file: File, idCol: String): Set[VariantGroupId] = {
-    val readerSelection = TsvReader.forSimpleHeaderLine(file)
+    val readerSelection = BasicTsvReader.forSimpleHeaderLine(file)
     val selectedIdStrings = readerSelection.flatMap(_.valueMap.get(idCol))
     selectedIdStrings.map(VariantGroupId.parse).collect {
       case Right(id) => id
