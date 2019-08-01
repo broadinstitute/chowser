@@ -1,15 +1,19 @@
 package chowser.expressions.values
 
-import chowser.expressions.Expression.{FloatLiteral, IntLiteral, Literal, StringLiteral, TupleExpression, UnitLiteral}
-import chowser.expressions.{ArgumentList, Expression, FloatType, IntType, LambdaType, StringType, TupleType, Type, UnitType}
+import chowser.expressions.Expression._
+import chowser.expressions._
 import chowser.util.NumberParser.LongParser
 import chowser.util.StringUtils
 
 trait Value {
   def tpe: Type
+
   def asString: String
+
   def asStringWithType: String = asString + ": " + tpe.asString
+
   def asExpression: Expression
+
   def isLambdaValue: Boolean
 }
 
@@ -38,7 +42,7 @@ case class FloatValue(value: Double) extends Value {
 
   override def asString: String = {
     val defaultString = value.toString
-    if(LongParser.isValid(defaultString)) {
+    if (LongParser.isValid(defaultString)) {
       defaultString + ".0"
     } else {
       defaultString
@@ -73,7 +77,9 @@ case class TupleValue(values: Seq[Value]) extends Value {
 
 case class LambdaValue(expression: Expression) extends Value {
   val argumentList: ArgumentList = expression.createArgumentList(ArgumentList.empty)
+
   def arity: Int = argumentList.argIds.size
+
   override def tpe: Type = LambdaType(arity)
 
   override def asString: String = expression.asString
@@ -81,4 +87,26 @@ case class LambdaValue(expression: Expression) extends Value {
   override def asExpression: Expression = expression
 
   override def isLambdaValue: Boolean = true
+}
+
+trait ObjectValue extends Value {
+  def id: ObjectValue.Id
+
+  override def asString: String = s"Object${id.index}"
+
+  override def asExpression: Expression = ObjectLiteral(this)
+
+  override def isLambdaValue: Boolean = false
+
+  override def tpe: Type
+}
+
+trait ObjectInstanceValue extends ObjectValue {
+  override def tpe: ObjectType
+}
+
+object ObjectValue {
+
+  case class Id(index: Long)
+
 }

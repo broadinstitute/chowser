@@ -1,9 +1,9 @@
 package chowser.expressions
 
 import chowser.expressions.Expression.TypeLiteral
-import chowser.expressions.values.Value
+import chowser.expressions.values.{ObjectValue, Value}
 
-trait Type extends Value {
+sealed trait Type extends Value {
   override def tpe: TypeType.type = TypeType
 
   override def asExpression: Expression = TypeLiteral(this)
@@ -43,3 +43,9 @@ case class TupleType(argTypes: Seq[Type]) extends Type {
 case class LambdaType(arity: Int) extends Type {
   override def asString: String = s"L$arity"
 }
+
+case class ObjectType(id: ObjectValue.Id)(val name: Identifier)
+  extends ObjectValue with Type {
+  override def asString: String = name.asString
+}
+

@@ -74,6 +74,12 @@ object Expression {
     override def asValue: UnitValue.type = UnitValue
   }
 
+  case class ObjectLiteral(objectValue: ObjectValue) extends Literal {
+    override def asValue: ObjectValue = objectValue
+
+    override def value: Any = objectValue
+  }
+
   case class ArgExpression(id: ArgExpressionId)(val posOpt: Option[Int]) extends Expression {
     def hasArguments: Boolean = true
 
