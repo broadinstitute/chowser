@@ -1,6 +1,5 @@
 package chowser.expressions.defs
 
-import chowser.expressions.ArgumentValues
 import chowser.expressions.defs.Def.{BinaryOpDef, FunctionDef, ScalarDef, UnitaryOpDef}
 import chowser.expressions.defs.Ref.{BinaryOpRef, FunctionRef, ScalarRef, UnitaryOpRef}
 import chowser.expressions.defs.Sig.{BinaryOpSig, FunctionSig, ScalarSig, UnitaryOpSig}
@@ -9,9 +8,7 @@ import chowser.expressions.defs.SymbolTable.{BinaryOpTable, FunctionTable, Scala
 case class SymbolTable(scalarTable: ScalarTable,
                        unitaryOpTable: UnitaryOpTable,
                        binaryOpTable: BinaryOpTable,
-                       functionTable: FunctionTable,
-                       argumentValues: ArgumentValues = ArgumentValues.empty) {
-  def withArgumentValues(argumentValues: ArgumentValues): SymbolTable = copy(argumentValues = argumentValues)
+                       functionTable: FunctionTable) {
 
   def +(scalarDef: ScalarDef): SymbolTable = copy(scalarTable = scalarTable + scalarDef)
 

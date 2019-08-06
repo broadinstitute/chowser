@@ -1,6 +1,6 @@
 package chowser.interpreter.tokenize
 
-import chowser.expressions.Expression.{ArgExpression, BinaryOpExpression, CallExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, TupleExpression, UnaryOpExpression, UnitLiteral}
+import chowser.expressions.Expression.{ParamExpression, BinaryOpExpression, CallExpression, FloatLiteral, IdentifierExpression, IntLiteral, Literal, StringLiteral, TupleExpression, UnaryOpExpression, UnitLiteral}
 import chowser.expressions.{Expression, Identifier, Operator}
 import chowser.util.NumberParser
 
@@ -20,15 +20,15 @@ object Token {
 
   sealed trait CallableToken extends TermToken
 
-  def argumentOpt(string: String): Option[ArgExpression] = {
+  def argumentOpt(string: String): Option[ParamExpression] = {
     if (string == "_") {
-      Some(ArgExpression.createNewSliding())
+      Some(ParamExpression.createNewSliding())
     } else {
       if (string.startsWith("_") && string.endsWith("_") && string.size > 2) {
         val middle = string.substring(1, string.size - 1)
         if (NumberParser.UnsignedIntParser.isValid(middle)) {
           val pos = NumberParser.UnsignedIntParser.parse(middle)
-          Some(ArgExpression.createNewPinned(pos))
+          Some(ParamExpression.createNewPinned(pos))
         } else {
           None
         }

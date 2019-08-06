@@ -86,9 +86,9 @@ case class TupleValue(values: Seq[Value]) extends Value {
 }
 
 case class LambdaValue(expression: Expression) extends Value {
-  val argumentList: ArgumentList = expression.createArgumentList(ArgumentList.empty)
+  val argumentList: ParameterList = expression.createParameterList(ParameterList.empty)
 
-  def arity: Int = argumentList.argIds.size
+  def arity: Int = argumentList.paramIds.size
 
   override def tpe: Type = LambdaType(arity)
 
