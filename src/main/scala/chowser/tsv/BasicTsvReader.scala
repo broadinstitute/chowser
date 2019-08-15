@@ -41,7 +41,9 @@ object BasicTsvReader {
 
   object LineCleaner {
     val noop: LineCleaner = (line: String) => line
+    val trim: LineCleaner = (line: String) => line.trim
     val removeLeadingSharps: LineCleaner = (line: String) => line.dropWhile(_ == '#')
+    val trimAndRemoveLeadingSharps: LineCleaner = (line: String) => line.trim.dropWhile(_ == '#')
   }
 
   trait LineSplitter {
@@ -55,15 +57,17 @@ object BasicTsvReader {
     }
 
     val byTab: RegexSplitter = RegexSplitter("\t")
+    val byWhiteSpaceGroup: RegexSplitter = RegexSplitter("\\s+")
   }
 
-  class LineParser(val headerCleaner: LineCleaner, val lineSplitter: LineSplitter) {
+  class LineParser(val headerCleaner: LineCleaner, val recordCleaner: LineCleaner, val lineSplitter: LineSplitter) {
     def parseHeaderLine(line: String): Seq[String] = lineSplitter.split(headerCleaner.clean(line))
-    def parseLine(line: String): Seq[String] = lineSplitter.split(line)
+    def parseLine(line: String): Seq[String] = lineSplitter.split(recordCleaner.clean(line))
   }
 
   object LineParser {
-    val default: LineParser = new LineParser(LineCleaner.removeLeadingSharps, LineSplitter.byTab)
+    val default: LineParser = new LineParser(LineCleaner.removeLeadingSharps, LineCleaner.noop, LineSplitter.byTab)
+    val whitespace: LineParser = new LineParser(LineCleaner.trim, LineCleaner.trim, LineSplitter.byTab)
   }
 
   def forSimpleHeaderLine(file: File, parser: LineParser = LineParser.default): BasicTsvReader =
