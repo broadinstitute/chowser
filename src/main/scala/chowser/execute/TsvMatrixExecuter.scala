@@ -13,8 +13,8 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
   def execute(command: TsvMatrixCommand): Result = {
     import command._
     val vcfReader = new VCFFileReader(idsFile.path, false)
-    val idList = vcfReader.iterator().asScala.map(_.getContig).toSeq
-    val matrix = new Matrix(idList, "0.0")
+    val idList = vcfReader.iterator().asScala.map(_.getID).toSeq
+    val matrix = new Matrix(idList, "0.0", "1.0")
     val valueReader = BasicTsvReader.forSimpleHeaderLine(valuesFile, LineParser.whitespace)
     valueReader.foreach { row =>
       matrix.put(row.string(idCol1), row.string(idCol2), row.string(valueCol))
@@ -23,9 +23,15 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
     Result(command, success = true)
   }
 
-  class Matrix(ids: Seq[String], default: String) {
+  class Matrix(ids: Seq[String], default: String, diagonal: String) {
     val size: Int = ids.size
-    val elements: Array[Array[String]] = Array.fill(size)(Array.fill(size)(default))
+    val elements: Array[Array[String]] = {
+      val elementsTmp = Array.fill(size)(Array.fill(size)(default))
+      for(i <- 0 until size) {
+        elementsTmp(i)(i) = diagonal
+      }
+      elementsTmp
+    }
     val idToIndex: Map[String, Int] = ids.zipWithIndex.toMap
 
     def put(id1: String, id2: String, value: String): Unit = {

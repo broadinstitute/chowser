@@ -1,17 +1,17 @@
 package chowser.tsv
 
 import better.files.File
-import chowser.tsv.BasicTsvReader.{LineSplitter, Row}
+import chowser.tsv.BasicTsvReader.{LineParser, LineSplitter, Row}
 import chowser.util.NumberParser
 
-class BasicTsvReader(val lineIterator: Iterator[String], val splitter: LineSplitter, val cols: Seq[String],
+class BasicTsvReader(val lineIterator: Iterator[String], val parser: LineParser, val cols: Seq[String],
                      val headerLines: Seq[String])
   extends TsvReader {
   override def hasNext: Boolean = lineIterator.hasNext
 
   override def next(): Row = {
     val line = lineIterator.next()
-    val values = splitter.split(line)
+    val values = parser.parseRecordLine(line)
     val valueMap = cols.zip(values).toMap
     Row(line, cols, valueMap)
   }
@@ -19,9 +19,9 @@ class BasicTsvReader(val lineIterator: Iterator[String], val splitter: LineSplit
 
 object BasicTsvReader {
 
-  def apply(lineIterator: Iterator[String], splitter: LineSplitter, cols: Seq[String],
+  def apply(lineIterator: Iterator[String], parser: LineParser, cols: Seq[String],
             headers: Seq[String]): BasicTsvReader =
-    new BasicTsvReader(lineIterator, splitter, cols, headers)
+    new BasicTsvReader(lineIterator, parser, cols, headers)
 
   case class Row(line: String, cols: Seq[String], valueMap: Map[String, String]) {
     def string(colName: String): String = valueMap(colName)
@@ -62,12 +62,12 @@ object BasicTsvReader {
 
   class LineParser(val headerCleaner: LineCleaner, val recordCleaner: LineCleaner, val lineSplitter: LineSplitter) {
     def parseHeaderLine(line: String): Seq[String] = lineSplitter.split(headerCleaner.clean(line))
-    def parseLine(line: String): Seq[String] = lineSplitter.split(recordCleaner.clean(line))
+    def parseRecordLine(line: String): Seq[String] = lineSplitter.split(recordCleaner.clean(line))
   }
 
   object LineParser {
     val default: LineParser = new LineParser(LineCleaner.removeLeadingSharps, LineCleaner.noop, LineSplitter.byTab)
-    val whitespace: LineParser = new LineParser(LineCleaner.trim, LineCleaner.trim, LineSplitter.byTab)
+    val whitespace: LineParser = new LineParser(LineCleaner.trim, LineCleaner.trim, LineSplitter.byWhiteSpaceGroup)
   }
 
   def forSimpleHeaderLine(file: File, parser: LineParser = LineParser.default): BasicTsvReader =
@@ -76,7 +76,7 @@ object BasicTsvReader {
   def forSimpleHeaderLine(lineIterator: Iterator[String], parser: LineParser): BasicTsvReader = {
     val headerLine = lineIterator.next()
     val cols = parser.parseHeaderLine(headerLine)
-    BasicTsvReader(lineIterator, parser.lineSplitter, cols, Seq(headerLine))
+    BasicTsvReader(lineIterator, parser, cols, Seq(headerLine))
   }
 
 }
