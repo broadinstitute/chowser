@@ -151,6 +151,16 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
     addSubcommand(pToZ)
   }
   addSubcommand(caviar)
+  val liftover = new Subcommand("liftover") {
+    val tsv = new Subcommand("tsv") with OneInFile with OneOutFile {
+      val chainFile = opt[JFile]("chain-file", required = true, descr = "Chain file")
+      val idCol = opt[String]("id-col", descr = "Name of id column")
+      val posCol = opt[String]("pos-col", descr = "Name of pos column")
+      requireAtLeastOne(idCol, posCol)
+    }
+    addSubcommand(tsv)
+  }
+  addSubcommand(liftover)
   val shell = new Subcommand("shell")
   addSubcommand(shell)
   requireSubcommand()
@@ -295,6 +305,14 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val idCol = subcommand.idCol()
         val pCol = subcommand.pCol()
         Right(CaviarPToZCommand(inFile, outFile, idCol, pCol))
+      case List(this.liftover, this.liftover.tsv) =>
+        val subcommand = liftover.tsv
+        val inFile = subcommand.in().toScala
+        val chainFile = subcommand.chainFile().toScala
+        val outFile = subcommand.out().toScala
+        val idColOpt = subcommand.idCol.toOption
+        val posColOpt = subcommand.posCol.toOption
+        Right(LiftoverTsvCommand(inFile, chainFile, outFile, idColOpt, posColOpt))
       case List(this.shell) => Right(ShellCommand)
       case _ => Left("Invalid combination of commands.")
     }
