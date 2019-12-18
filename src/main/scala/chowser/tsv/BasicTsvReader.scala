@@ -1,19 +1,18 @@
 package chowser.tsv
 
 import better.files.File
-import chowser.tsv.BasicTsvReader.{LineParser, LineSplitter, Row}
-import chowser.util.NumberParser
+import chowser.tsv.BasicTsvReader.LineParser
 
 class BasicTsvReader(val lineIterator: Iterator[String], val parser: LineParser, val cols: Seq[String],
                      val headerLines: Seq[String])
   extends TsvReader {
   override def hasNext: Boolean = lineIterator.hasNext
 
-  override def next(): Row = {
+  override def next(): TsvRow = {
     val line = lineIterator.next()
     val values = parser.parseRecordLine(line)
     val valueMap = cols.zip(values).toMap
-    Row(line, cols, valueMap)
+    TsvRow(line, cols, valueMap)
   }
 }
 
@@ -22,18 +21,6 @@ object BasicTsvReader {
   def apply(lineIterator: Iterator[String], parser: LineParser, cols: Seq[String],
             headers: Seq[String]): BasicTsvReader =
     new BasicTsvReader(lineIterator, parser, cols, headers)
-
-  case class Row(line: String, cols: Seq[String], valueMap: Map[String, String]) {
-    def string(colName: String): String = valueMap(colName)
-
-    def unsignedInt(colName: String): Int = NumberParser.UnsignedIntParser.parse(valueMap(colName))
-
-    def withValue(key: String, value: String): Row = {
-      val valueMapNew = valueMap + (key -> value)
-      val lineNew = cols.map(valueMapNew.getOrElse(_, "")).mkString("\t")
-      copy(line = lineNew, valueMap = valueMapNew)
-    }
-  }
 
   trait LineCleaner {
     def clean(line: String): String

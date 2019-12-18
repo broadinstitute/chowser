@@ -2,7 +2,7 @@ package chowser.execute
 
 import chowser.cmd.VariantsCanonicalizeTsvCommand
 import chowser.genomics.{Chromosome, VariantGroupId}
-import chowser.tsv.BasicTsvReader
+import chowser.tsv.{BasicTsvReader, TsvRow}
 import chowser.util.NumberParser
 
 object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonicalizeTsvCommand] {
@@ -21,7 +21,7 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
 
   def updateWithCanonicalId(idCol: String, chromosomeCol: String,
                             positionCol: String, refCol: String, altCol: String,
-                            reporter: String => Unit)(row: BasicTsvReader.Row): BasicTsvReader.Row = {
+                            reporter: String => Unit)(row: TsvRow): TsvRow = {
     createCanonicalId(row.valueMap, idCol, chromosomeCol, positionCol, refCol, altCol) match {
       case Left(message) =>
         reporter(message)

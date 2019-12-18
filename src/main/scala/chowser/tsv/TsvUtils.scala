@@ -4,11 +4,10 @@ import better.files.File
 import chowser.execute.ExecutionUtils
 import chowser.filter.Filter
 import chowser.genomics.VariantGroupId
-import chowser.tsv.BasicTsvReader.Row
 
 object TsvUtils {
 
-  def filterRows(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, filter: Filter[Row]): Unit = {
+  def filterRows(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, filter: Filter[TsvRow]): Unit = {
     val reader = readerGenerator(inFile)
     if (outFile.nonEmpty) {
       outFile.clear()
