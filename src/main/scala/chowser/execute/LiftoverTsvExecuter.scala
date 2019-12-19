@@ -24,7 +24,7 @@ object LiftoverTsvExecuter extends ChowserExecuter[LiftoverTsvCommand] {
                 VariantGroupId.parse(idString) match {
                   case Left(_) => None
                   case Right(id) =>
-                    HtsjdkUtils.liftOverKeepChromosome(liftOver, id.location) match {
+                    HtsjdkUtils.liftOver(liftOver, id.location) match {
                       case Left(_) => None
                       case Right(locationLiftedOver) =>
                         val idLiftedOver = id.copy(location = locationLiftedOver)
@@ -47,7 +47,7 @@ object LiftoverTsvExecuter extends ChowserExecuter[LiftoverTsvCommand] {
                     NumberParser.UnsignedIntParser.parseOpt(posString) match {
                       case Some(pos) =>
                         val locationOriginal = Location(chromosome, pos)
-                        HtsjdkUtils.liftOverKeepChromosome(liftOver, locationOriginal) match {
+                        HtsjdkUtils.liftOver(liftOver, locationOriginal) match {
                           case Left(_) => None
                           case Right(locationLiftedOver) =>
                             Some(row.withValue(posCol, locationLiftedOver.position.toString))

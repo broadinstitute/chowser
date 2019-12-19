@@ -1,7 +1,7 @@
 package chowser.vcf
 
 import better.files.File
-import chowser.genomics.Location
+import chowser.genomics.{Chromosome, Location}
 import htsjdk.samtools.liftover.LiftOver
 import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.VariantContext
@@ -23,13 +23,30 @@ object HtsjdkUtils {
     writer.close()
   }
 
-  def liftOverKeepChromosome(liftOver: LiftOver, location: Location): Either[String, Location] = {
-    val intervalOriginal = new Interval(location.chromosome.toString, location.position, location.position)
-    val intervalLiftedOver = liftOver.liftOver(intervalOriginal)
-    if (intervalLiftedOver == null) {
-      Left(s"Location $location cannot be lifted over.")
+  def liftOver(htsjdkLiftOver: LiftOver, location: Location, chromToString: Chromosome => String):
+  Either[String, Location] = {
+    val chromosomeString = chromToString(location.chromosome)
+    val position = location.position
+    val intervalOriginal = new Interval(chromosomeString, position, position)
+    val intervalLiftedOver = htsjdkLiftOver.liftOver(intervalOriginal)
+    if(intervalLiftedOver == null) {
+      Left(s"Cannot map $chromosomeString:$position")
     } else {
-      Right(Location(location.chromosome, intervalLiftedOver.getStart))
+      Chromosome.parse(intervalLiftedOver.getContig) match {
+        case Left(message) => Left(message)
+        case Right(chromosome) => Right(Location(chromosome, intervalLiftedOver.getStart))
+      }
+    }
+  }
+
+  def liftOver(htsjdkLiftOver: LiftOver, location: Location): Either[String, Location] = {
+    liftOver(htsjdkLiftOver, location, _.inEnsembleNotation) match {
+      case Left(message1) =>
+        liftOver(htsjdkLiftOver, location, _.inUcscNotation) match {
+          case Left(message2) => Left(message1 +"; " + message2)
+          case Right(location) => Right(location)
+        }
+      case Right(location) => Right(location)
     }
   }
 }
