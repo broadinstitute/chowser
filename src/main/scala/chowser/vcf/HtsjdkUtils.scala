@@ -1,6 +1,9 @@
 package chowser.vcf
 
 import better.files.File
+import chowser.genomics.Location
+import htsjdk.samtools.liftover.LiftOver
+import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.VCFFileReader
@@ -18,5 +21,15 @@ object HtsjdkUtils {
     val variantContextIter = reader.iterator().asScala
     transformation(variantContextIter).foreach(writer.add)
     writer.close()
+  }
+
+  def liftOverKeepChromosome(liftOver: LiftOver, location: Location): Either[String, Location] = {
+    val intervalOriginal = new Interval(location.chromosome.toString, location.position, location.position)
+    val intervalLiftedOver = liftOver.liftOver(intervalOriginal)
+    if (intervalLiftedOver == null) {
+      Left(s"Location $location cannot be lifted over.")
+    } else {
+      Right(Location(location.chromosome, intervalLiftedOver.getStart))
+    }
   }
 }

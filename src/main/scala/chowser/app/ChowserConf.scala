@@ -3,6 +3,7 @@ package chowser.app
 import java.io.{File => JFile}
 
 import better.files._
+import chowser.cmd.LiftoverTsvCommand.ChromPosCols
 import chowser.cmd._
 import chowser.filter.{DoubleFilters, Filter}
 import chowser.genomics.{Chromosome, Region}
@@ -155,8 +156,10 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
     val tsv = new Subcommand("tsv") with OneInFile with OneOutFile {
       val chainFile = opt[JFile]("chain-file", required = true, descr = "Chain file")
       val idCol = opt[String]("id-col", descr = "Name of id column")
+      val chromCol = opt[String]("chrom-col", descr = "Name of chromosome column")
       val posCol = opt[String]("pos-col", descr = "Name of pos column")
       requireAtLeastOne(idCol, posCol)
+      codependent(chromCol, posCol)
     }
     addSubcommand(tsv)
   }
@@ -311,8 +314,10 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val chainFile = subcommand.chainFile().toScala
         val outFile = subcommand.out().toScala
         val idColOpt = subcommand.idCol.toOption
+        val chromColOpt = subcommand.chromCol.toOption
         val posColOpt = subcommand.posCol.toOption
-        Right(LiftoverTsvCommand(inFile, chainFile, outFile, idColOpt, posColOpt))
+        val chromPosColsOpt = for(chromCol <- chromColOpt; posCol <- posColOpt) yield ChromPosCols(chromCol, posCol)
+        Right(LiftoverTsvCommand(inFile, chainFile, outFile, idColOpt, chromPosColsOpt))
       case List(this.shell) => Right(ShellCommand)
       case _ => Left("Invalid combination of commands.")
     }

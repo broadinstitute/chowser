@@ -10,6 +10,8 @@ class TsvWriter(val file: File, val headers: Seq[String]) {
 
   def valuesToLine(values: Seq[String]): String = values.mkString("\t")
 
+  def addRow(row: TsvRow): Unit = addRow(row.valueMap)
+
   def addRow(value: String, values: String*): Unit = addRow(value +: values)
 
   def addRow(values: Seq[String]): Unit = {
