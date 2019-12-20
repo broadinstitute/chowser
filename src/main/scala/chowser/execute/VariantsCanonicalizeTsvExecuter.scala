@@ -13,7 +13,7 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
     if (outFile.nonEmpty) {
       outFile.clear()
     }
-    reader.headerLines.foreach(outFile.appendLine(_))
+    reader.header.lines.foreach(outFile.appendLine(_))
     reader.map(updateWithCanonicalId(idCol, chromosomeCol, positionCol, refCol, altCol, _ => ()))
       .map(_.line).foreach(outFile.appendLine(_))
     Result(command, success = true)

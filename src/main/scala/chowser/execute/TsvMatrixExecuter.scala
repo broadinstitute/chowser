@@ -3,7 +3,7 @@ package chowser.execute
 import better.files.File
 import chowser.cmd.TsvMatrixCommand
 import chowser.tsv.BasicTsvReader.LineParser
-import chowser.tsv.{BasicTsvReader, TsvWriter}
+import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import htsjdk.variant.vcf.VCFFileReader
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
@@ -45,8 +45,8 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
     }
 
     def writeTo(file: File): Unit = {
-      val writer = TsvWriter(file, Seq.empty)
-      elements.foreach(writer.addRow(_))
+      val writer = TsvWriter(file, TsvHeader.empty)
+      elements.foreach(values => writer.addRow(TsvRow(values)))
     }
   }
 

@@ -1,7 +1,7 @@
 package chowser.genomics
 
 import better.files.File
-import chowser.tsv.{BasicTsvReader, TsvWriter}
+import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import chowser.util.NumberParser
 import htsjdk.variant.variantcontext.VariantContext
 
@@ -75,10 +75,10 @@ object VariantId {
   }
 
   class VariantIdTsvWriter(val idKey: String)(val file: File) {
-    val tsvWriter = new TsvWriter(file, Seq(idKey))
+    val tsvWriter = new TsvWriter(file, TsvHeader.ofLine(idKey))
 
     def add(variantId: VariantId): Unit = {
-      tsvWriter.addRow(Map(idKey -> variantId.toString))
+      tsvWriter.addRow(TsvRow(Seq(idKey), Map(idKey -> variantId.toString)))
     }
   }
 

@@ -2,7 +2,7 @@ package chowser.genomics
 
 import better.files.File
 import chowser.genomics.VariantId.coordinateDividerRegex
-import chowser.tsv.{BasicTsvReader, TsvWriter}
+import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import chowser.util.NumberParser
 import htsjdk.variant.variantcontext.VariantContext
 
@@ -82,10 +82,10 @@ object VariantGroupId {
   }
 
   class VariantGroupIdTsvWriter(val idKey: String)(val file: File) {
-    val tsvWriter = new TsvWriter(file, Seq(idKey))
+    val tsvWriter = new TsvWriter(file, TsvHeader.ofLine(idKey))
 
     def add(variantGroupId: VariantGroupId): Unit = {
-      tsvWriter.addRow(Map(idKey -> variantGroupId.toString))
+      tsvWriter.addRow(TsvRow(Seq(idKey), Map(idKey -> variantGroupId.toString)))
     }
   }
 

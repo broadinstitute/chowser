@@ -2,7 +2,7 @@ package chowser.execute
 
 import better.files.File
 import chowser.cmd.VariantsRegionsCommand
-import chowser.tsv.{BasicTsvReader, TsvWriter}
+import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import org.scalatest.FunSuite
 
 class VariantsRegionsExecuterTest extends FunSuite {
@@ -13,31 +13,32 @@ class VariantsRegionsExecuterTest extends FunSuite {
 
 
   private def prepareInFile(file: File): Unit = {
-    val writer = TsvWriter(file, Seq(chromColName, posColName))
-    writer.addRow("1", "104200")
-    writer.addRow("1", "103500")
-    writer.addRow("1", "101400")
-    writer.addRow("1", "100700")
-    writer.addRow("1", "102800")
-    writer.addRow("1", "102100")
-    writer.addRow("3", "104200")
-    writer.addRow("3", "103500")
-    writer.addRow("3", "101400")
-    writer.addRow("3", "100700")
-    writer.addRow("3", "102800")
-    writer.addRow("3", "102100")
-    writer.addRow("X", "104200")
-    writer.addRow("X", "103500")
-    writer.addRow("X", "101400")
-    writer.addRow("X", "100700")
-    writer.addRow("X", "102800")
-    writer.addRow("X", "102100")
-    writer.addRow("1", "204200")
-    writer.addRow("1", "203500")
-    writer.addRow("1", "201400")
-    writer.addRow("1", "200700")
-    writer.addRow("1", "202800")
-    writer.addRow("1", "202100")
+    val writer = TsvWriter(file, TsvHeader.ofColNames(Seq(chromColName, posColName)))
+    def addRow(chrom: String, pos: String): Unit = writer.addRow(TsvRow(chromColName -> chrom, posColName -> pos))
+    addRow("1", "104200")
+    addRow("1", "103500")
+    addRow("1", "101400")
+    addRow("1", "100700")
+    addRow("1", "102800")
+    addRow("1", "102100")
+    addRow("3", "104200")
+    addRow("3", "103500")
+    addRow("3", "101400")
+    addRow("3", "100700")
+    addRow("3", "102800")
+    addRow("3", "102100")
+    addRow("X", "104200")
+    addRow("X", "103500")
+    addRow("X", "101400")
+    addRow("X", "100700")
+    addRow("X", "102800")
+    addRow("X", "102100")
+    addRow("1", "204200")
+    addRow("1", "203500")
+    addRow("1", "201400")
+    addRow("1", "200700")
+    addRow("1", "202800")
+    addRow("1", "202100")
   }
 
   test("execute") {

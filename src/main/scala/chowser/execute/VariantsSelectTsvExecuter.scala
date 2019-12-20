@@ -20,7 +20,7 @@ object VariantsSelectTsvExecuter extends ChowserExecuter[VariantsSelectTsvComman
     if (outFile.nonEmpty) {
       outFile.clear()
     }
-    readerData.headerLines.foreach(outFile.appendLine(_))
+    readerData.header.lines.foreach(outFile.appendLine(_))
     readerData.filter(rowFilter).map(_.line).foreach(outFile.appendLine(_))
     Result(command, success = true)
   }

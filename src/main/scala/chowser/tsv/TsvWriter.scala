@@ -2,28 +2,17 @@ package chowser.tsv
 
 import better.files.File
 
-class TsvWriter(val file: File, val headers: Seq[String]) {
-  if(file.nonEmpty) {
+class TsvWriter(val file: File, header: TsvHeader) {
+  if (file.nonEmpty) {
     file.clear()
   }
-  file.appendLine(valuesToLine(headers))
-
-  def valuesToLine(values: Seq[String]): String = values.mkString("\t")
-
-  def addRow(row: TsvRow): Unit = addRow(row.valueMap)
-
-  def addRow(value: String, values: String*): Unit = addRow(value +: values)
-
-  def addRow(values: Seq[String]): Unit = {
-    file.appendLine(valuesToLine(values))
+  for (headerLine <- header.lines) {
+    file.appendLine(headerLine)
   }
 
-  def addRow(valueMap: Map[String, String]): Unit = {
-    addRow(headers.map(valueMap.getOrElse(_, "")))
-  }
-
+  def addRow(row: TsvRow): Unit = file.appendLine(row.line)
 }
 
 object TsvWriter {
-  def apply(file: File, headers: Seq[String]): TsvWriter = new TsvWriter(file, headers)
+  def apply(file: File, header: TsvHeader): TsvWriter = new TsvWriter(file, header)
 }

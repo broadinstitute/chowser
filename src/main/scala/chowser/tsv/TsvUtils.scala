@@ -12,7 +12,7 @@ object TsvUtils {
     if (outFile.nonEmpty) {
       outFile.clear()
     }
-    reader.headerLines.foreach(outFile.appendLine(_))
+    reader.header.lines.foreach(outFile.appendLine(_))
     reader.filter(filter).map(_.line).foreach(outFile.appendLine(_))
   }
 
@@ -25,7 +25,7 @@ object TsvUtils {
     if (outFile.nonEmpty) {
       outFile.clear()
     }
-    val nHeaderLines = reader.headerLines.size
+    val nHeaderLines = reader.header.lines.size
     val commandString =
       s"{ head -n $nHeaderLines $inFile; tail -n +${nHeaderLines + 1} $inFile | " +
         s"sort -t$$'\\t' -k${colIndex + 1} -n ; } > $outFile"
@@ -42,7 +42,7 @@ object TsvUtils {
     if (outFile.nonEmpty) {
       outFile.clear()
     }
-    val nHeaderLines = reader.headerLines.size
+    val nHeaderLines = reader.header.lines.size
     val commandString =
       s"{ echo $colName; tail -n +${nHeaderLines + 1} $inFile | cut -f ${colIndex + 1} | sort -u ; } > $outFile"
     println(commandString)

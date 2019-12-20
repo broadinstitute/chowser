@@ -4,7 +4,7 @@ import better.files.File
 import chowser.tsv.BasicTsvReader.LineParser
 
 class BasicTsvReader(val lineIterator: Iterator[String], val parser: LineParser, val cols: Seq[String],
-                     val headerLines: Seq[String])
+                     val header: TsvHeader)
   extends TsvReader {
   override def hasNext: Boolean = lineIterator.hasNext
 
@@ -19,8 +19,8 @@ class BasicTsvReader(val lineIterator: Iterator[String], val parser: LineParser,
 object BasicTsvReader {
 
   def apply(lineIterator: Iterator[String], parser: LineParser, cols: Seq[String],
-            headers: Seq[String]): BasicTsvReader =
-    new BasicTsvReader(lineIterator, parser, cols, headers)
+            header: TsvHeader): BasicTsvReader =
+    new BasicTsvReader(lineIterator, parser, cols, header)
 
   trait LineCleaner {
     def clean(line: String): String
@@ -63,7 +63,7 @@ object BasicTsvReader {
   def forSimpleHeaderLine(lineIterator: Iterator[String], parser: LineParser): BasicTsvReader = {
     val headerLine = lineIterator.next()
     val cols = parser.parseHeaderLine(headerLine)
-    BasicTsvReader(lineIterator, parser, cols, Seq(headerLine))
+    BasicTsvReader(lineIterator, parser, cols, TsvHeader.ofLine(headerLine))
   }
 
 }
