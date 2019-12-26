@@ -46,6 +46,11 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
       val col = opt[String]("col", required = true, descr = "Name of column to sort by")
     }
     addSubcommand(sort)
+    val sortIds = new Subcommand("sort-ids") with OneInFile with OneOutFile {
+      banner("usage: chowser tsv sort-ids [OPTIONS]\nSort records of tab-separated file")
+      val col = opt[String]("col", required = true, descr = "Name of column of variant ids to sort by")
+    }
+    addSubcommand(sortIds)
     val extractUnique = new Subcommand("extract-unique") with OneInFile with OneOutFile {
       banner("usage: chowser tsv extract-unique [OPTIONS]\nExtract unique values of a column of tab-separated file")
       val col = opt[String]("col", required = true, descr = "Name of column")
@@ -198,6 +203,12 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out().toScala
         val colName = subcommand.col()
         Right(TsvSortCommand(inFile, outFile, colName))
+      case List(this.tsv, this.tsv.sortIds) =>
+        val subcommand = tsv.sortIds
+        val inFile = subcommand.in().toScala
+        val outFile = subcommand.out().toScala
+        val colName = subcommand.col()
+        Right(TsvSortIdsCommand(inFile, outFile, colName))
       case List(this.tsv, this.tsv.extractUnique) =>
         val subcommand = tsv.extractUnique
         val inFile = subcommand.in().toScala

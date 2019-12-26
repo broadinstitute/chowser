@@ -19,6 +19,7 @@ object ChowserExecuter {
       case tsvRangeCommand: TsvRangeCommand => TsvRangeExecuter.execute(tsvRangeCommand)
       case tsvSliceCommand: TsvSliceCommand => TsvSliceExecuter.execute(tsvSliceCommand)
       case tsvSortCommand: TsvSortCommand => TsvSortExecuter.execute(tsvSortCommand)
+      case tsvSortIdsCommand: TsvSortIdsCommand => TsvSortIdsExecuter.execute(tsvSortIdsCommand)
       case tsvExtractUniqueCommand: TsvExtractUniqueCommand =>
         TsvExtractUniqueExecuter.execute(tsvExtractUniqueCommand)
       case variantsCanonicalizeVcfCommand: VariantsCanonicalizeVcfCommand =>

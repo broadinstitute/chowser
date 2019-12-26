@@ -33,6 +33,24 @@ object TsvUtils {
     ExecutionUtils.runBashScript(commandString)
   }
 
+  def sortRowsByIds(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
+    val reader = readerGenerator(inFile)
+    val colIndex = reader.cols.indexOf(colName)
+    if (colIndex < 0) {
+      throw new Exception(s"File $inFile does not have a column $colName.")
+    }
+    if (outFile.nonEmpty) {
+      outFile.clear()
+    }
+//    val nHeaderLines = reader.header.lines.size
+//    val commandString =
+//      s"{ head -n $nHeaderLines $inFile; tail -n +${nHeaderLines + 1} $inFile | " +
+//        s"sort -t$$'\\t' -k${colIndex + 1} -n ; } > $outFile"
+//    println(commandString)
+//    ExecutionUtils.runBashScript(commandString)
+    ???
+  }
+
   def extractUniqueValues(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
     val reader = readerGenerator(inFile)
     val colIndex = reader.cols.indexOf(colName)
