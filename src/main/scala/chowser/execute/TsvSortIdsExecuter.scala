@@ -1,6 +1,6 @@
 package chowser.execute
 
-import chowser.cmd.{TsvSortCommand, TsvSortIdsCommand}
+import chowser.cmd.TsvSortIdsCommand
 import chowser.tsv.{BasicTsvReader, TsvUtils}
 
 object TsvSortIdsExecuter extends ChowserExecuter[TsvSortIdsCommand] {

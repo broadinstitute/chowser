@@ -5,6 +5,8 @@ import chowser.execute.ExecutionUtils
 import chowser.filter.Filter
 import chowser.genomics.VariantGroupId
 
+import scala.collection.immutable.TreeSet
+
 object TsvUtils {
 
   def filterRows(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, filter: Filter[TsvRow]): Unit = {
@@ -35,20 +37,22 @@ object TsvUtils {
 
   def sortRowsByIds(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
     val reader = readerGenerator(inFile)
-    val colIndex = reader.cols.indexOf(colName)
-    if (colIndex < 0) {
+    if (!reader.cols.contains(colName)) {
       throw new Exception(s"File $inFile does not have a column $colName.")
     }
     if (outFile.nonEmpty) {
       outFile.clear()
     }
-//    val nHeaderLines = reader.header.lines.size
-//    val commandString =
-//      s"{ head -n $nHeaderLines $inFile; tail -n +${nHeaderLines + 1} $inFile | " +
-//        s"sort -t$$'\\t' -k${colIndex + 1} -n ; } > $outFile"
-//    println(commandString)
-//    ExecutionUtils.runBashScript(commandString)
-    ???
+    val orderingByIds = new Ordering[TsvRow] {
+      override def compare(row1: TsvRow, row2: TsvRow): Int = {
+        val location1 = VariantGroupId.parse(row1.valueMap(colName)).right.get.location
+        val location2 = VariantGroupId.parse(row2.valueMap(colName)).right.get.location
+        location1.compare(location2)
+      }
+    }
+    val rowsSorted = TreeSet[TsvRow]()(orderingByIds) ++ reader
+    val writer = TsvWriter(outFile, reader.header)
+    rowsSorted.foreach(writer.addRow)
   }
 
   def extractUniqueValues(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
