@@ -8,7 +8,7 @@ import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.VCFFileReader
 
-import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.jdk.CollectionConverters._
 
 object HtsjdkUtils {
   def transformVcf(inFile: File, outFile: File)

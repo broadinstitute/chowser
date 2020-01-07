@@ -6,7 +6,7 @@ import chowser.tsv.BasicTsvReader.LineParser
 import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import htsjdk.variant.vcf.VCFFileReader
 
-import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.jdk.CollectionConverters._
 
 object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
 

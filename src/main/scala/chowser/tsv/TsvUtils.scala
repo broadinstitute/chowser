@@ -45,8 +45,8 @@ object TsvUtils {
     }
     val orderingByIds = new Ordering[TsvRow] {
       override def compare(row1: TsvRow, row2: TsvRow): Int = {
-        val location1 = VariantGroupId.parse(row1.valueMap(colName)).right.get.location
-        val location2 = VariantGroupId.parse(row2.valueMap(colName)).right.get.location
+        val location1 = VariantGroupId.parse(row1.valueMap(colName)).toOption.get.location
+        val location2 = VariantGroupId.parse(row2.valueMap(colName)).toOption.get.location
         location1.compare(location2)
       }
     }

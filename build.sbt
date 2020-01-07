@@ -1,11 +1,11 @@
 import sbt.project
 
-val chowserV = "1.7.4"
-val scalaV = "2.12.8"
-val scalaTestV = "3.0.5"
+val chowserV = "1.7.5"
+val scalaV = "2.13.1"
+val scalaTestV = "3.1.0"
 val betterFilesV = "3.8.0"
-val scallopV = "3.2.0"
-val htsjdkV = "2.19.0"
+val scallopV = "3.3.2"
+val htsjdkV = "2.21.1"
 
 lazy val mainDeps = Seq(
   "com.github.pathikrit" %% "better-files" % betterFilesV,

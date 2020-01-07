@@ -6,7 +6,7 @@ import chowser.genomics.VariantGroupId
 import chowser.genomics.VariantGroupId.VariantGroupIdTsvReader
 import htsjdk.variant.vcf.VCFFileReader
 
-import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.jdk.CollectionConverters._
 
 object VariantsMatchVcfTsvExecuter extends ChowserExecuter[VariantsMatchVcfTsvCommand] {
   override def execute(command: VariantsMatchVcfTsvCommand): Result = {

@@ -6,7 +6,7 @@ import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import chowser.util.NumberParser
 import htsjdk.variant.variantcontext.VariantContext
 
-import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.jdk.CollectionConverters._
 
 case class VariantGroupId(location: Location, ref: String, alts: Seq[String]) extends Location.HasLocation {
 
@@ -33,7 +33,7 @@ object VariantGroupId {
       case Right(chromosome) =>
         val pos = context.getStart
         val ref = VariantId.adjustSequenceIfEmpty(context.getReference.getBaseString)
-        val alts = context.getAlternateAlleles.asScala.map(_.getBaseString).map(VariantId.adjustSequenceIfEmpty)
+        val alts = context.getAlternateAlleles.asScala.toSeq.map(_.getBaseString).map(VariantId.adjustSequenceIfEmpty)
           Right(VariantGroupId(chromosome, pos, ref, alts))
     }
   }

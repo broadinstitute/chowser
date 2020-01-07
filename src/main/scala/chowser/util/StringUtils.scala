@@ -2,17 +2,17 @@ package chowser.util
 
 object StringUtils {
 
-  val escapes: Map[Char, Seq[Char]] = Map(
-    '\b' -> Seq('\\', 'b'),
-    '\n' -> Seq('\\', 'n'),
-    '\t' -> Seq('\\', 't'),
-    '\r' -> Seq('\\', 'r'),
-    '\f' -> Seq('\\', '\f'),
-    '"' -> Seq('\\', '"'),
-    '\\' -> Seq('\\', '\\'),
+  val escapes: Map[Char, String] = Map(
+    '\b' -> "\\b",
+    '\n' -> "\\n",
+    '\t' -> "\\t",
+    '\r' -> "\\r",
+    '\f' -> "\\\f",
+    '"' -> "\\\"",
+    '\\' -> "\\\\",
   )
 
-  def escape(string: String): String = string.flatMap(char => escapes.getOrElse(char, Seq(char)))
+  def escape(string: String): String = string.flatMap(char => escapes.getOrElse(char, new String(Array(char))))
 
 //  Backspace is replaced with \b.
 //  Newline is replaced with \n.
