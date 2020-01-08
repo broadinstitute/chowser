@@ -2,7 +2,9 @@ package chowser.util
 
 import java.util.regex.Pattern
 
-import scala.util.Try
+import org.broadinstitute.yootilz.core.snag.Snag
+
+import scala.util.{Failure, Success, Try}
 
 trait NumberParser[T] {
 
@@ -23,6 +25,20 @@ trait NumberParser[T] {
       None
     }
   }
+
+  def parseEither(string: String): Either[Snag, T] = {
+    if (isValid(string)) {
+      Try {
+        parse(string)
+      } match {
+        case Success(value) => Right(value)
+        case Failure(exception) => Left(Snag(exception))
+      }
+    } else {
+      Left(Snag(s"$string is not a valid number."))
+    }
+  }
+
 
 }
 
