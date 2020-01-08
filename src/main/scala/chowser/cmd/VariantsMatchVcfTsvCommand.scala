@@ -1,9 +1,9 @@
 package chowser.cmd
 
-import better.files.File
+import chowser.util.io.IoId
 
-case class VariantsMatchVcfTsvCommand(vcf: File, tsv: File, idCol: String,
-                                      inBothOpt: Option[File], vcfOnlyOpt: Option[File], tsvOnlyOpt: Option[File])
+case class VariantsMatchVcfTsvCommand(vcf: IoId, tsv: IoId, idCol: String,
+                                      inBothOpt: Option[IoId], vcfOnlyOpt: Option[IoId], tsvOnlyOpt: Option[IoId])
   extends ChowserCommand {
 
 }

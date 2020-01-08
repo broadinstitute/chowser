@@ -1,6 +1,6 @@
 package chowser.cmd
 
-import better.files.File
+import chowser.util.io.IoId
 
 trait ChowserCommand {
 
@@ -9,11 +9,11 @@ trait ChowserCommand {
 object ChowserCommand {
 
   trait OneInFile {
-    def inFile: File
+    def inFile: IoId
   }
 
   trait OneOutFile {
-    def outFile: File
+    def outFile: IoId
   }
 
 }

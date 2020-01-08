@@ -9,7 +9,7 @@ object VariantsCanonicalizeVcfExecuter extends ChowserExecuter[VariantsCanonical
 
   override def execute(command: VariantsCanonicalizeVcfCommand): Either[Snag, Result] = {
     import command.{inFile, outFile}
-    VcfUtils.transformVcf(inFile, outFile) { vcfRecordIter =>
+    VcfUtils.transformVcf(inFile.file, outFile.file) { vcfRecordIter =>
       vcfRecordIter.flatMap { vcfRecord =>
         vcfRecord.withCanonicalId match {
           case Left(message) =>

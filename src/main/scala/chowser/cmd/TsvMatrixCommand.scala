@@ -1,8 +1,8 @@
 package chowser.cmd
 
-import better.files.File
+import chowser.util.io.IoId
 
-case class TsvMatrixCommand(valuesFile: File, idsFile: File, outFile: File,
+case class TsvMatrixCommand(valuesFile: IoId, idsFile: IoId, outFile: IoId,
                             idCol1: String, idCol2: String, valueCol: String)
   extends ChowserCommand with ChowserCommand.OneOutFile {
 }

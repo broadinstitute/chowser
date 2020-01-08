@@ -11,7 +11,7 @@ object VariantsSelectVcfExecuter extends ChowserExecuter[VariantsSelectVcfComman
 
   override def execute(command: VariantsSelectVcfCommand): Either[Snag, Result] = {
     import command._
-    val selectedIds = TsvUtils.loadVariantGroupIds(selectionFile, idColSelection)
+    val selectedIds = TsvUtils.loadVariantGroupIds(selectionFile.file, idColSelection)
     val vcfRecordFilter: VcfRecord => Boolean = { record =>
       VariantGroupId.parse(record.id) match {
         case Left(message) =>
@@ -20,7 +20,7 @@ object VariantsSelectVcfExecuter extends ChowserExecuter[VariantsSelectVcfComman
         case Right(id) => selectedIds(id)
       }
     }
-    VcfUtils.transformVcf(dataFile, outFile)(_.filter(vcfRecordFilter))
+    VcfUtils.transformVcf(dataFile.file, outFile.file)(_.filter(vcfRecordFilter))
     Right(Result.Done)
   }
 }

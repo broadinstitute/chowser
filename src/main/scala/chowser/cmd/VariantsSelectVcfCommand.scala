@@ -1,8 +1,8 @@
 package chowser.cmd
 
-import better.files.File
+import chowser.util.io.IoId
 
-case class VariantsSelectVcfCommand(dataFile: File, selectionFile: File, outFile: File, idColSelection: String)
-  extends ChowserCommand {
+case class VariantsSelectVcfCommand(dataFile: IoId, selectionFile: IoId, outFile: IoId, idColSelection: String)
+  extends ChowserCommand with ChowserCommand.OneOutFile {
 
 }

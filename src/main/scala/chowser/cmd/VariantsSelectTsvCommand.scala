@@ -1,9 +1,9 @@
 package chowser.cmd
 
-import better.files.File
+import chowser.util.io.IoId
 
-case class VariantsSelectTsvCommand(dataFile: File, selectionFile: File, outFile: File,
+case class VariantsSelectTsvCommand(dataFile: IoId, selectionFile: IoId, outFile: IoId,
                                     idColData: String, idColSelection: String)
-  extends ChowserCommand {
+  extends ChowserCommand with ChowserCommand.OneOutFile {
 
 }

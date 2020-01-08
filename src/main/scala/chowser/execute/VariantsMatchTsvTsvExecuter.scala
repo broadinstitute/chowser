@@ -17,7 +17,8 @@ object VariantsMatchTsvTsvExecuter extends ChowserExecuter[VariantsMatchTsvTsvCo
       new VariantGroupIdTsvReader(idCol2)(file)
     }
     val comparer = VariantMatcher(idCol1)
-    comparer.compare(tsv1, tsv2, tsvToIter1, tsvToIter2, inBothOpt, onlyInOneOpt, onlyInTwoOpt)
+    comparer.compare(tsv1.file, tsv2.file, tsvToIter1, tsvToIter2, inBothOpt.map(_.file), onlyInOneOpt.map(_.file),
+      onlyInTwoOpt.map(_.file))
     Right(Result.Done)
   }
 }

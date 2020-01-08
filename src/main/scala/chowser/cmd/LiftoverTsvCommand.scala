@@ -1,9 +1,9 @@
 package chowser.cmd
 
-import better.files.File
 import chowser.cmd.LiftoverTsvCommand.ChromPosCols
+import chowser.util.io.IoId
 
-case class LiftoverTsvCommand(inFile: File, chainFile: File, outFile: File,
+case class LiftoverTsvCommand(inFile: IoId, chainFile: IoId, outFile: IoId,
                               idColOpt: Option[String], chromPosColsOpt: Option[ChromPosCols])
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 

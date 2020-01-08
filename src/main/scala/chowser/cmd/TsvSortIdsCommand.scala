@@ -1,8 +1,8 @@
 package chowser.cmd
 
-import better.files.File
+import chowser.util.io.IoId
 
-case class TsvSortIdsCommand(inFile: File, outFile: File, colName: String)
+case class TsvSortIdsCommand(inFile: IoId, outFile: IoId, colName: String)
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 
 }

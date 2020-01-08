@@ -1,9 +1,9 @@
 package chowser.cmd
 
-import better.files.File
 import chowser.filter.Filter
+import chowser.util.io.IoId
 
-case class TsvRangeCommand(inFile: File, outFile: File, colName: String, filter: Filter[Double])
+case class TsvRangeCommand(inFile: IoId, outFile: IoId, colName: String, filter: Filter[Double])
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 
 }

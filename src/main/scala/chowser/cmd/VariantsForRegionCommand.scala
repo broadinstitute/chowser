@@ -1,9 +1,9 @@
 package chowser.cmd
 
-import better.files.File
 import chowser.genomics.Region
+import chowser.util.io.IoId
 
-case class VariantsForRegionCommand(inFile: File, outFile: File, chromColName: String, posColName: String,
+case class VariantsForRegionCommand(inFile: IoId, outFile: IoId, chromColName: String, posColName: String,
                                     region: Region)
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 

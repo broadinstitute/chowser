@@ -1,13 +1,11 @@
 package chowser.app
 
-import java.io.{File => JFile}
-
-import better.files._
 import chowser.cmd.LiftoverTsvCommand.ChromPosCols
 import chowser.cmd._
 import chowser.filter.{DoubleFilters, Filter}
 import chowser.genomics.{Chromosome, Region}
-import org.rogach.scallop.{ScallopConf, Subcommand}
+import chowser.util.io.IoId
+import org.rogach.scallop.{ScallopConf, Subcommand, ValueConverter, singleArgConverter}
 
 import scala.language.reflectiveCalls
 
@@ -15,14 +13,16 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   version(ChowserAppInfo.fullName)
   banner("Usage: chowser tsv|vcf ... ")
 
+  implicit val ioIdConverter: ValueConverter[IoId] = singleArgConverter(IoId.apply)
+
   trait OneInFile {
     _: ScallopConf =>
-    val in = opt[JFile]("in", required = true, descr = "Input file")
+    val in = opt[IoId]("in", required = true, descr = "Input file")
   }
 
   trait OneOutFile {
     _: ScallopConf =>
-    val out = opt[JFile]("out", required = true, descr = "Output file")
+    val out = opt[IoId]("out", required = true, descr = "Output file")
   }
 
   val tsv = new Subcommand("tsv") {
@@ -103,37 +103,37 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
     }
     addSubcommand(canonicalizeTsv)
     val matchVcfTsv = new Subcommand("match-vcf-tsv") {
-      val vcf = opt[JFile](name = "vcf", required = true, descr = "Input VCF file")
-      val tsv = opt[JFile](name = "tsv", required = true, descr = "Input TSV file")
+      val vcf = opt[IoId](name = "vcf", required = true, descr = "Input VCF file")
+      val tsv = opt[IoId](name = "tsv", required = true, descr = "Input TSV file")
       val idCol = opt[String](name = "id-col", required = true, descr = "Variant id column name in TSV file")
-      val inBoth = opt[JFile](name = "in-both", descr = "Output file with variants both in VCF and TSV file.")
-      val vcfOnly = opt[JFile](name = "vcf-only", descr = "Output file with variants only in VCF file.")
-      val tsvOnly = opt[JFile](name = "tsv-only", descr = "Output file with variants only in TSV file.")
+      val inBoth = opt[IoId](name = "in-both", descr = "Output file with variants both in VCF and TSV file.")
+      val vcfOnly = opt[IoId](name = "vcf-only", descr = "Output file with variants only in VCF file.")
+      val tsvOnly = opt[IoId](name = "tsv-only", descr = "Output file with variants only in TSV file.")
       requireAtLeastOne(inBoth, vcfOnly, tsvOnly)
     }
     addSubcommand(matchVcfTsv)
     val matchTsvTsv = new Subcommand("match-tsv-tsv") {
-      val tsv1 = opt[JFile](name = "tsv1", required = true, descr = "Input VCF file")
-      val tsv2 = opt[JFile](name = "tsv2", required = true, descr = "Input TSV file")
+      val tsv1 = opt[IoId](name = "tsv1", required = true, descr = "Input VCF file")
+      val tsv2 = opt[IoId](name = "tsv2", required = true, descr = "Input TSV file")
       val idCol1 = opt[String](name = "id-col1", required = true, descr = "Variant id column name in TSV file 1")
       val idCol2 = opt[String](name = "id-col2", required = true, descr = "Variant id column name in TSV file 2")
-      val inBoth = opt[JFile](name = "in-both", descr = "Output file with variants in both TSV files.")
-      val inOneOnly = opt[JFile](name = "tsv1-only", descr = "Output file with variants only in TSV file 1.")
-      val inTwoOnly = opt[JFile](name = "tsv2-only", descr = "Output file with variants only in TSV file 2.")
+      val inBoth = opt[IoId](name = "in-both", descr = "Output file with variants in both TSV files.")
+      val inOneOnly = opt[IoId](name = "tsv1-only", descr = "Output file with variants only in TSV file 1.")
+      val inTwoOnly = opt[IoId](name = "tsv2-only", descr = "Output file with variants only in TSV file 2.")
       requireAtLeastOne(inBoth, inOneOnly, inTwoOnly)
     }
     addSubcommand(matchTsvTsv)
     val selectTsv = new Subcommand("select-tsv") with OneOutFile {
-      val data = opt[JFile](name = "data", required = true, descr = "File with data to to select.")
-      val selection = opt[JFile](name = "selection", required = true, descr = "Ids of variants to select..")
+      val data = opt[IoId](name = "data", required = true, descr = "File with data to to select.")
+      val selection = opt[IoId](name = "selection", required = true, descr = "Ids of variants to select..")
       val idColData = opt[String](name = "id-col-data", required = true, descr = "Column with variant ids in data.")
       val idColSelection =
         opt[String](name = "id-col-selection", required = true, descr = "Column with variant ids in selection.")
     }
     addSubcommand(selectTsv)
     val selectVcf = new Subcommand("select-vcf") with OneOutFile {
-      val data = opt[JFile](name = "data", required = true, descr = "File with data to to select.")
-      val selection = opt[JFile](name = "selection", required = true, descr = "Ids of variants to select..")
+      val data = opt[IoId](name = "data", required = true, descr = "File with data to to select.")
+      val selection = opt[IoId](name = "selection", required = true, descr = "Ids of variants to select..")
       val idColSelection =
         opt[String](name = "id-col-selection", required = true, descr = "Column with variant ids in selection.")
     }
@@ -143,8 +143,8 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   val caviar = new Subcommand("caviar") {
     val matrix = new Subcommand("matrix") with OneOutFile {
       banner("usage: chowser tsv matrix [OPTIONS]\nReshape list of values into matrix form")
-      val valuesFile = opt[JFile]("values-file", required = true, descr = "File with values")
-      val idsFile = opt[JFile]("ids-file", required = true, descr = "VCF File for ids")
+      val valuesFile = opt[IoId]("values-file", required = true, descr = "File with values")
+      val idsFile = opt[IoId]("ids-file", required = true, descr = "VCF File for ids")
       val valueCol = opt[String]("value-col", required = true, descr = "Name of value column in values file.")
       val idCol1 = opt[String]("id-col1", required = true, descr = "Name of first id column in values file.")
       val idCol2 = opt[String]("id-col2", required = true, descr = "Name of second id column in values file.")
@@ -159,7 +159,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   addSubcommand(caviar)
   val liftover = new Subcommand("liftover") {
     val tsv = new Subcommand("tsv") with OneInFile with OneOutFile {
-      val chainFile = opt[JFile]("chain-file", required = true, descr = "Chain file")
+      val chainFile = opt[IoId]("chain-file", required = true, descr = "Chain file")
       val idCol = opt[String]("id-col", descr = "Name of id column")
       val chromCol = opt[String]("chrom-col", descr = "Name of chromosome column")
       val posCol = opt[String]("pos-col", descr = "Name of pos column")
@@ -178,8 +178,8 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
     subcommands match {
       case List(this.tsv, this.tsv.range) =>
         val subcommand = tsv.range
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val colName = subcommand.col()
         val upperLimitOpt = subcommand.lt.toOption.map(DoubleFilters.lessThan)
         val lowerLimitOpt = subcommand.gt.toOption.map(DoubleFilters.greaterThan)
@@ -192,41 +192,41 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         Right(TsvRangeCommand(inFile, outFile, colName, numberFilter))
       case List(this.tsv, this.tsv.slice) =>
         val subcommand = tsv.slice
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val colName = subcommand.col()
         val value = subcommand.value()
         Right(TsvSliceCommand(inFile, outFile, colName, Filter.Equal(value)))
       case List(this.tsv, this.tsv.sort) =>
         val subcommand = tsv.sort
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val colName = subcommand.col()
         Right(TsvSortCommand(inFile, outFile, colName))
       case List(this.tsv, this.tsv.sortIds) =>
         val subcommand = tsv.sortIds
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val colName = subcommand.col()
         Right(TsvSortIdsCommand(inFile, outFile, colName))
       case List(this.tsv, this.tsv.extractUnique) =>
         val subcommand = tsv.extractUnique
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val colName = subcommand.col()
         Right(TsvExtractUniqueCommand(inFile, outFile, colName))
       case List(this.variants, this.variants.regions) =>
         val subcommand = variants.regions
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val chromColName = subcommand.chromCol()
         val posColName = subcommand.posCol()
         val radius = subcommand.radius()
         Right(VariantsRegionsCommand(inFile, outFile, chromColName, posColName, radius))
       case List(this.variants, this.variants.forRegion) =>
         val subcommand = variants.forRegion
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val chromColName = subcommand.chromCol()
         val posColName = subcommand.posCol()
         val chromosomeEither = Chromosome.parse(subcommand.chrom())
@@ -239,8 +239,8 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         }
       case List(this.variants, this.variants.forRegionById) =>
         val subcommand = variants.forRegionById
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val idColName = subcommand.idCol()
         val chromosomeEither = Chromosome.parse(subcommand.chrom())
         val start = subcommand.start()
@@ -252,13 +252,13 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         }
       case List(this.variants, this.variants.canonicalizeVcf) =>
         val subcommand = variants.canonicalizeVcf
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         Right(VariantsCanonicalizeVcfCommand(inFile, outFile))
       case List(this.variants, this.variants.canonicalizeTsv) =>
         val subcommand = variants.canonicalizeTsv
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val idCol = subcommand.idCol()
         val chromCol = subcommand.chromCol()
         val posCol = subcommand.posCol()
@@ -267,63 +267,63 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         Right(VariantsCanonicalizeTsvCommand(inFile, outFile, idCol, chromCol, posCol, refCol, altCol))
       case List(this.variants, this.variants.matchVcfTsv) =>
         val subcommand = variants.matchVcfTsv
-        val vcfFile = subcommand.vcf().toScala
-        val tsvFile = subcommand.tsv().toScala
+        val vcfFile = subcommand.vcf()
+        val tsvFile = subcommand.tsv()
         val idColName = subcommand.idCol()
-        val inBothOpt = subcommand.inBoth.toOption.map(_.toScala)
-        val vcfOnly = subcommand.vcfOnly.toOption.map(_.toScala)
-        val tsvOnly = subcommand.tsvOnly.toOption.map(_.toScala)
+        val inBothOpt = subcommand.inBoth.toOption
+        val vcfOnly = subcommand.vcfOnly.toOption
+        val tsvOnly = subcommand.tsvOnly.toOption
         Right(
           VariantsMatchVcfTsvCommand(vcfFile, tsvFile, idColName, inBothOpt, vcfOnly, tsvOnly)
         )
       case List(this.variants, this.variants.matchTsvTsv) =>
         val subcommand = variants.matchTsvTsv
-        val vcfFile = subcommand.tsv1().toScala
-        val tsvFile = subcommand.tsv2().toScala
+        val vcfFile = subcommand.tsv1()
+        val tsvFile = subcommand.tsv2()
         val idCol1 = subcommand.idCol1()
         val idCol2 = subcommand.idCol2()
-        val inBothOpt = subcommand.inBoth.toOption.map(_.toScala)
-        val inOneOnly = subcommand.inOneOnly.toOption.map(_.toScala)
-        val inTwoOnly = subcommand.inTwoOnly.toOption.map(_.toScala)
+        val inBothOpt = subcommand.inBoth.toOption
+        val inOneOnly = subcommand.inOneOnly.toOption
+        val inTwoOnly = subcommand.inTwoOnly.toOption
         Right(
           VariantsMatchTsvTsvCommand(vcfFile, tsvFile, idCol1, idCol2, inBothOpt, inOneOnly, inTwoOnly)
         )
       case List(this.variants, this.variants.selectTsv) =>
         val subcommand = variants.selectTsv
-        val dataFile = subcommand.data().toScala
-        val selectionFile = subcommand.selection().toScala
-        val outFile = subcommand.out().toScala
+        val dataFile = subcommand.data()
+        val selectionFile = subcommand.selection()
+        val outFile = subcommand.out()
         val idColData = subcommand.idColData()
         val idColSelection = subcommand.idColSelection()
         Right(VariantsSelectTsvCommand(dataFile, selectionFile, outFile, idColData, idColSelection))
       case List(this.variants, this.variants.selectVcf) =>
         val subcommand = variants.selectVcf
-        val dataFile = subcommand.data().toScala
-        val selectionFile = subcommand.selection().toScala
-        val outFile = subcommand.out().toScala
+        val dataFile = subcommand.data()
+        val selectionFile = subcommand.selection()
+        val outFile = subcommand.out()
         val idColSelection = subcommand.idColSelection()
         Right(VariantsSelectVcfCommand(dataFile, selectionFile, outFile, idColSelection))
       case List(this.caviar, this.caviar.matrix) =>
         val subcommand = caviar.matrix
-        val valuesFile = subcommand.valuesFile().toScala
-        val idsFile = subcommand.idsFile().toScala
-        val outFile = subcommand.out().toScala
+        val valuesFile = subcommand.valuesFile()
+        val idsFile = subcommand.idsFile()
+        val outFile = subcommand.out()
         val idCol1 = subcommand.idCol1()
         val idCol2 = subcommand.idCol2()
         val valueCol = subcommand.valueCol()
         Right(TsvMatrixCommand(valuesFile, idsFile, outFile, idCol1, idCol2, valueCol))
       case List(this.caviar, this.caviar.pToZ) =>
         val subcommand = caviar.pToZ
-        val inFile = subcommand.in().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val outFile = subcommand.out()
         val idCol = subcommand.idCol()
         val pCol = subcommand.pCol()
         Right(CaviarPToZCommand(inFile, outFile, idCol, pCol))
       case List(this.liftover, this.liftover.tsv) =>
         val subcommand = liftover.tsv
-        val inFile = subcommand.in().toScala
-        val chainFile = subcommand.chainFile().toScala
-        val outFile = subcommand.out().toScala
+        val inFile = subcommand.in()
+        val chainFile = subcommand.chainFile()
+        val outFile = subcommand.out()
         val idColOpt = subcommand.idCol.toOption
         val chromColOpt = subcommand.chromCol.toOption
         val posColOpt = subcommand.posCol.toOption

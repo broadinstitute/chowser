@@ -14,9 +14,9 @@ object LiftoverTsvExecuter extends ChowserExecuter[LiftoverTsvCommand] {
 
   override def execute(command: LiftoverTsvCommand): Either[Snag, Result] = {
     import command.{chainFile, inFile, outFile, idColOpt, chromPosColsOpt}
-    val liftOver = new LiftOver(chainFile.toJava)
-    val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
-    val writer = TsvWriter(outFile, reader.header)
+    val liftOver = new LiftOver(chainFile.file.toJava)
+    val reader = BasicTsvReader.forSimpleHeaderLine(inFile.file)
+    val writer = TsvWriter(outFile.file, reader.header)
     val rowMapper: TsvRow => Iterator[TsvRow] = { row =>
       val rowNewOpt =
         idColOpt match {

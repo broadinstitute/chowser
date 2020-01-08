@@ -1,8 +1,8 @@
 package chowser.cmd
 
-import better.files.File
+import chowser.util.io.IoId
 
-case class VariantsCanonicalizeVcfCommand(inFile: File, outFile: File)
+case class VariantsCanonicalizeVcfCommand(inFile: IoId, outFile: IoId)
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 
 }

@@ -11,7 +11,7 @@ object VariantsForRegionByIdExecuter extends ChowserExecuter[VariantsForRegionBy
   override def execute(command: VariantsForRegionByIdCommand): Either[Snag, Result] = {
     import command.{idColName, inFile, outFile, region}
     val rowFilter = RowFilters.ForCol(idColName, VariantInRegionFilter(region))
-    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile.file, outFile.file, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
     Right(Result.Done)
   }
 

@@ -13,7 +13,7 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
 
   override def execute(command: VariantsRegionsCommand): Either[Snag, Result] = {
     import command.{inFile, outFile, chromColName, posColName, radius }
-    val rowIterator = BasicTsvReader.forSimpleHeaderLine(inFile)
+    val rowIterator = BasicTsvReader.forSimpleHeaderLine(inFile.file)
     var regionsByChromosome: Map[String, CanonicalIntervals] = Map.empty
     for(row <- rowIterator) {
       val chromosome = row.string(chromColName)
@@ -26,10 +26,10 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
       regionsByChromosome += (chromosome -> regionsNew)
     }
     val chromosomes = regionsByChromosome.keys.toSeq.sorted
-    if(outFile.nonEmpty) {
-      outFile.clear()
+    if(outFile.file.nonEmpty) {
+      outFile.file.clear()
     }
-    val writer = TsvWriter(outFile, TsvHeader.ofColNames(Seq(chromColName, startColName, endColName)))
+    val writer = TsvWriter(outFile.file, TsvHeader.ofColNames(Seq(chromColName, startColName, endColName)))
     for(chromosome <- chromosomes) {
       val regions = regionsByChromosome(chromosome)
       for(region <- regions.intervals) {

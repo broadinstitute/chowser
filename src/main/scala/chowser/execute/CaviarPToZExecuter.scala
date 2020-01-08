@@ -10,16 +10,16 @@ object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
 
   override def execute(command: CaviarPToZCommand): Either[Snag, Result] = {
     import command.{idCol, inFile, outFile, pCol}
-    val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
-    if (outFile.nonEmpty) {
-      outFile.clear()
+    val reader = BasicTsvReader.forSimpleHeaderLine(inFile.file)
+    if (outFile.file.nonEmpty) {
+      outFile.file.clear()
     }
     reader.foreach { row =>
       val id = row.valueMap(idCol)
       val pValueString = row.valueMap(pCol)
       val pValue = NumberParser.DoubleParser.parse(pValueString)
       val zScore = MathUtils.probit(pValue)
-     outFile.appendLine(id + "\t" + zScore)
+     outFile.file.appendLine(id + "\t" + zScore)
     }
     Right(Result.Done)
   }

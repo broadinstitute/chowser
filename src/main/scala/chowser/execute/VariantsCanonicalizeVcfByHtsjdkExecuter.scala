@@ -11,7 +11,7 @@ object VariantsCanonicalizeVcfByHtsjdkExecuter extends ChowserExecuter[VariantsC
 
   override def execute(command: VariantsCanonicalizeVcfCommand): Either[Snag, Result] = {
     import command.{inFile, outFile}
-    HtsjdkUtils.transformVcf(inFile, outFile) { variantContextIter =>
+    HtsjdkUtils.transformVcf(inFile.file, outFile.file) { variantContextIter =>
       variantContextIter.flatMap { context =>
         VariantGroupId.fromVariantContext(context) match {
           case Right(newId) =>

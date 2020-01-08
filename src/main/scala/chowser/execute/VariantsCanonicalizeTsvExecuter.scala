@@ -11,13 +11,13 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
 
   override def execute(command: VariantsCanonicalizeTsvCommand): Either[Snag, Result] = {
     import command._
-    val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
-    if (outFile.nonEmpty) {
-      outFile.clear()
+    val reader = BasicTsvReader.forSimpleHeaderLine(inFile.file)
+    if (outFile.file.nonEmpty) {
+      outFile.file.clear()
     }
-    reader.header.lines.foreach(outFile.appendLine(_))
+    reader.header.lines.foreach(outFile.file.appendLine(_))
     reader.map(updateWithCanonicalId(idCol, chromosomeCol, positionCol, refCol, altCol, _ => ()))
-      .map(_.line).foreach(outFile.appendLine(_))
+      .map(_.line).foreach(outFile.file.appendLine(_))
     Right(Result.Done)
   }
 

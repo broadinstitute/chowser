@@ -1,8 +1,8 @@
 package chowser.cmd
 
-import better.files.File
+import chowser.util.io.IoId
 
-case class CaviarPToZCommand(inFile: File, outFile: File, idCol: String, pCol: String)
+case class CaviarPToZCommand(inFile: IoId, outFile: IoId, idCol: String, pCol: String)
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 
 }
