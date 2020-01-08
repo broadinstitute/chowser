@@ -1,18 +1,17 @@
 package chowser.execute
 
-import chowser.cmd.{TsvRangeCommand, TsvSliceCommand}
-import chowser.filter.{RowFilters, StringFilters}
+import chowser.cmd.TsvSliceCommand
+import chowser.execute.ChowserExecuter.Result
+import chowser.filter.RowFilters
 import chowser.tsv.{BasicTsvReader, TsvUtils}
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object TsvSliceExecuter extends ChowserExecuter[TsvSliceCommand] {
 
-  def execute(command: TsvSliceCommand): Result = {
-    import command.{inFile, outFile, colName, filter}
+  override def execute(command: TsvSliceCommand): Either[Snag, Result] = {
+    import command.{colName, filter, inFile, outFile}
     val rowFilter = RowFilters.ForCol(colName, filter)
     TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: TsvSliceCommand, success: Boolean) extends ChowserExecuter.Result[TsvSliceCommand]
-
 }

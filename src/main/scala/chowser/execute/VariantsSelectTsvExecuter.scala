@@ -1,13 +1,15 @@
 package chowser.execute
 
 import chowser.cmd.VariantsSelectTsvCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.genomics.VariantGroupId
 import chowser.tsv.{BasicTsvReader, TsvUtils}
 import chowser.tsv.TsvRow
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsSelectTsvExecuter extends ChowserExecuter[VariantsSelectTsvCommand] {
 
-  def execute(command: VariantsSelectTsvCommand): Result = {
+  override def execute(command: VariantsSelectTsvCommand): Either[Snag, Result] = {
     import command._
     val selectedIds = TsvUtils.loadVariantGroupIds(selectionFile, idColSelection)
     val rowFilter: TsvRow => Boolean = { row =>
@@ -22,10 +24,6 @@ object VariantsSelectTsvExecuter extends ChowserExecuter[VariantsSelectTsvComman
     }
     readerData.header.lines.foreach(outFile.appendLine(_))
     readerData.filter(rowFilter).map(_.line).foreach(outFile.appendLine(_))
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: VariantsSelectTsvCommand, success: Boolean)
-    extends ChowserExecuter.Result[VariantsSelectTsvCommand]
-
 }

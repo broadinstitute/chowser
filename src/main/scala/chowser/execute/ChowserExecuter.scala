@@ -1,19 +1,22 @@
 package chowser.execute
 
 import chowser.cmd._
+import org.broadinstitute.yootilz.core.snag.Snag
 
 trait ChowserExecuter[C <: ChowserCommand] {
-  def execute(command: C): ChowserExecuter.Result[C]
+  def execute(command: C): Either[Snag, ChowserExecuter.Result]
 }
 
-object ChowserExecuter {
+object ChowserExecuter extends ChowserExecuter[ChowserCommand] {
 
-  trait Result[+C <: ChowserCommand] {
-    def command: C
-    def success: Boolean
+  trait Result {
   }
 
-  def execute(command: ChowserCommand): Result[ChowserCommand] = {
+  object Result {
+    object Done extends Result
+  }
+
+  override def execute(command: ChowserCommand): Either[Snag, Result] = {
     command match {
       case tsvMatrixCommand: TsvMatrixCommand => TsvMatrixExecuter.execute(tsvMatrixCommand)
       case tsvRangeCommand: TsvRangeCommand => TsvRangeExecuter.execute(tsvRangeCommand)

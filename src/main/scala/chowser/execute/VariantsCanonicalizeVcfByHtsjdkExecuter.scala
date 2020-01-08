@@ -1,13 +1,15 @@
 package chowser.execute
 
 import chowser.cmd.VariantsCanonicalizeVcfCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.genomics.VariantGroupId
 import chowser.vcf.HtsjdkUtils
 import htsjdk.variant.variantcontext.VariantContextBuilder
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsCanonicalizeVcfByHtsjdkExecuter extends ChowserExecuter[VariantsCanonicalizeVcfCommand] {
 
-  def execute(command: VariantsCanonicalizeVcfCommand): Result = {
+  override def execute(command: VariantsCanonicalizeVcfCommand): Either[Snag, Result] = {
     import command.{inFile, outFile}
     HtsjdkUtils.transformVcf(inFile, outFile) { variantContextIter =>
       variantContextIter.flatMap { context =>
@@ -20,10 +22,6 @@ object VariantsCanonicalizeVcfByHtsjdkExecuter extends ChowserExecuter[VariantsC
         }
       }
     }
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: VariantsCanonicalizeVcfCommand, success: Boolean)
-    extends ChowserExecuter.Result[VariantsCanonicalizeVcfCommand]
-
 }

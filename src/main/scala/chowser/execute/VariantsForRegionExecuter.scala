@@ -1,23 +1,22 @@
 package chowser.execute
 
 import chowser.cmd.VariantsForRegionCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.filter.{Filter, RowFilters, StringFilters}
 import chowser.genomics.Chromosome
 import chowser.tsv.{BasicTsvReader, TsvUtils}
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsForRegionExecuter extends ChowserExecuter[VariantsForRegionCommand] {
-  override def execute(command: VariantsForRegionCommand): ChowserExecuter.Result[VariantsForRegionCommand] = {
+  override def execute(command: VariantsForRegionCommand): Either[Snag, Result] = {
     import command.{inFile, outFile, chromColName, posColName, region}
     val rowFilter =
       RowFilters.ForCol(chromColName, ChromosomeFilter(region.chromosome)) &&
         RowFilters.ForCol(posColName, StringFilters.parseAsUnsignedIntegerAndFilter(_ >= region.start)) &&
         RowFilters.ForCol(posColName, StringFilters.parseAsUnsignedIntegerAndFilter(_ < region.end))
     TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: VariantsForRegionCommand, success: Boolean)
-    extends ChowserExecuter.Result[VariantsForRegionCommand]
 
   case class ChromosomeFilter(chromosome: Chromosome) extends Filter[String] {
     override def apply(chromosomeString: String): Boolean = {

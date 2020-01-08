@@ -1,13 +1,15 @@
 package chowser.execute
 
 import chowser.cmd.VariantsCanonicalizeTsvCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.genomics.{Chromosome, VariantGroupId}
 import chowser.tsv.{BasicTsvReader, TsvRow}
 import chowser.util.NumberParser
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonicalizeTsvCommand] {
 
-  def execute(command: VariantsCanonicalizeTsvCommand): Result = {
+  override def execute(command: VariantsCanonicalizeTsvCommand): Either[Snag, Result] = {
     import command._
     val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
     if (outFile.nonEmpty) {
@@ -16,7 +18,7 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
     reader.header.lines.foreach(outFile.appendLine(_))
     reader.map(updateWithCanonicalId(idCol, chromosomeCol, positionCol, refCol, altCol, _ => ()))
       .map(_.line).foreach(outFile.appendLine(_))
-    Result(command, success = true)
+    Right(Result.Done)
   }
 
   def updateWithCanonicalId(idCol: String, chromosomeCol: String,
@@ -60,8 +62,4 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
       case None => Left("No chromosome")
     }
   }
-
-  case class Result(command: VariantsCanonicalizeTsvCommand, success: Boolean)
-    extends ChowserExecuter.Result[VariantsCanonicalizeTsvCommand]
-
 }

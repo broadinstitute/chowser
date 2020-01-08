@@ -1,12 +1,14 @@
 package chowser.execute
 
 import chowser.cmd.CaviarPToZCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.tsv.BasicTsvReader
 import chowser.util.{MathUtils, NumberParser}
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
 
-  def execute(command: CaviarPToZCommand): Result = {
+  override def execute(command: CaviarPToZCommand): Either[Snag, Result] = {
     import command.{idCol, inFile, outFile, pCol}
     val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
     if (outFile.nonEmpty) {
@@ -19,9 +21,6 @@ object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
       val zScore = MathUtils.probit(pValue)
      outFile.appendLine(id + "\t" + zScore)
     }
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: CaviarPToZCommand, success: Boolean) extends ChowserExecuter.Result[CaviarPToZCommand]
-
 }

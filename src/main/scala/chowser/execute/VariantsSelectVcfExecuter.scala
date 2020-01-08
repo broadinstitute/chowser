@@ -1,13 +1,15 @@
 package chowser.execute
 
 import chowser.cmd.VariantsSelectVcfCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.genomics.VariantGroupId
 import chowser.tsv.TsvUtils
 import chowser.vcf.{VcfRecord, VcfUtils}
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsSelectVcfExecuter extends ChowserExecuter[VariantsSelectVcfCommand] {
 
-  def execute(command: VariantsSelectVcfCommand): Result = {
+  override def execute(command: VariantsSelectVcfCommand): Either[Snag, Result] = {
     import command._
     val selectedIds = TsvUtils.loadVariantGroupIds(selectionFile, idColSelection)
     val vcfRecordFilter: VcfRecord => Boolean = { record =>
@@ -19,10 +21,6 @@ object VariantsSelectVcfExecuter extends ChowserExecuter[VariantsSelectVcfComman
       }
     }
     VcfUtils.transformVcf(dataFile, outFile)(_.filter(vcfRecordFilter))
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: VariantsSelectVcfCommand, success: Boolean)
-    extends ChowserExecuter.Result[VariantsSelectVcfCommand]
-
 }

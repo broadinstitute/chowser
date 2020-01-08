@@ -1,15 +1,17 @@
 package chowser.execute
 
 import chowser.cmd.VariantsRegionsCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import chowser.util.intervals.{CanonicalIntervals, Interval}
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
 
   val startColName = "start"
   val endColName = "end"
 
-  def execute(command: VariantsRegionsCommand): Result = {
+  override def execute(command: VariantsRegionsCommand): Either[Snag, Result] = {
     import command.{inFile, outFile, chromColName, posColName, radius }
     val rowIterator = BasicTsvReader.forSimpleHeaderLine(inFile)
     var regionsByChromosome: Map[String, CanonicalIntervals] = Map.empty
@@ -36,10 +38,6 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
         )
       }
     }
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: VariantsRegionsCommand, success: Boolean)
-    extends ChowserExecuter.Result[VariantsRegionsCommand]
-
 }

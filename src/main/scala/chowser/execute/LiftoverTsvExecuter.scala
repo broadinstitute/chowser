@@ -2,15 +2,17 @@ package chowser.execute
 
 import chowser.cmd.LiftoverTsvCommand
 import chowser.cmd.LiftoverTsvCommand.ChromPosCols
+import chowser.execute.ChowserExecuter.Result
 import chowser.genomics.{Chromosome, Location, VariantGroupId}
 import chowser.tsv.{BasicTsvReader, TsvRow, TsvWriter}
 import chowser.util.NumberParser
 import chowser.vcf.HtsjdkUtils
 import htsjdk.samtools.liftover.LiftOver
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object LiftoverTsvExecuter extends ChowserExecuter[LiftoverTsvCommand] {
 
-  def execute(command: LiftoverTsvCommand): Result = {
+  override def execute(command: LiftoverTsvCommand): Either[Snag, Result] = {
     import command.{chainFile, inFile, outFile, idColOpt, chromPosColsOpt}
     val liftOver = new LiftOver(chainFile.toJava)
     val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
@@ -66,9 +68,6 @@ object LiftoverTsvExecuter extends ChowserExecuter[LiftoverTsvCommand] {
       }
     }
     reader.flatMap(rowMapper).foreach(row => writer.addRow(row))
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: LiftoverTsvCommand, success: Boolean) extends ChowserExecuter.Result[LiftoverTsvCommand]
-
 }

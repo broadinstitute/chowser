@@ -1,11 +1,13 @@
 package chowser.execute
 
 import chowser.cmd.VariantsCanonicalizeVcfCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.vcf.VcfUtils
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsCanonicalizeVcfExecuter extends ChowserExecuter[VariantsCanonicalizeVcfCommand] {
 
-  def execute(command: VariantsCanonicalizeVcfCommand): Result = {
+  override def execute(command: VariantsCanonicalizeVcfCommand): Either[Snag, Result] = {
     import command.{inFile, outFile}
     VcfUtils.transformVcf(inFile, outFile) { vcfRecordIter =>
       vcfRecordIter.flatMap { vcfRecord =>
@@ -18,10 +20,6 @@ object VariantsCanonicalizeVcfExecuter extends ChowserExecuter[VariantsCanonical
         }
       }
     }
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: VariantsCanonicalizeVcfCommand, success: Boolean)
-    extends ChowserExecuter.Result[VariantsCanonicalizeVcfCommand]
-
 }

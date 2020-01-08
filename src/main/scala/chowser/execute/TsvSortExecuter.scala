@@ -1,16 +1,15 @@
 package chowser.execute
 
 import chowser.cmd.TsvSortCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.tsv.{BasicTsvReader, TsvUtils}
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object TsvSortExecuter extends ChowserExecuter[TsvSortCommand] {
 
-  def execute(command: TsvSortCommand): Result = {
+  override def execute(command: TsvSortCommand): Either[Snag, Result] = {
     import command.{colName, inFile, outFile}
     TsvUtils.sortRowsByCol(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), colName)
-    Result(command, success = true)
+    Right(Result.Done)
   }
-
-  case class Result(command: TsvSortCommand, success: Boolean) extends ChowserExecuter.Result[TsvSortCommand]
-
 }

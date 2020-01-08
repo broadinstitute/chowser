@@ -1,17 +1,19 @@
 package chowser.execute
 
 import chowser.cmd.ShellCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.expressions.defs.Def.ValDef
 import chowser.expressions.defs.Ref.ValRef
 import chowser.expressions.defs.Sig.ScalarSig
 import chowser.expressions.defs.predef.ChowserPredefDefs
 import chowser.expressions.{ChowserRuntime, Context, Identifier}
 import chowser.interpreter.ChowserInterpreter
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object ShellExecuter extends ChowserExecuter[ShellCommand.type] {
-  override def execute(command: ShellCommand.type): Result = execute()
+  override def execute(command: ShellCommand.type): Either[Snag, Result] = execute()
 
-  def execute(): Result = {
+  def execute(): Either[Snag, Result] = {
     println("Welcome to ChowserShell!")
     val context = Context.predef
     val runtime = new ChowserRuntime
@@ -33,12 +35,6 @@ object ShellExecuter extends ChowserExecuter[ShellCommand.type] {
           }
       }
     }
-    Result(true)
+    Right(Result.Done)
   }
-
-  case class Result(success: Boolean) extends ChowserExecuter.Result[ShellCommand.type] {
-    override def command: ShellCommand.type = ShellCommand
-  }
-
-
 }

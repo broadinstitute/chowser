@@ -2,15 +2,17 @@ package chowser.execute
 
 import better.files.File
 import chowser.cmd.TsvMatrixCommand
+import chowser.execute.ChowserExecuter.Result
 import chowser.tsv.BasicTsvReader.LineParser
 import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import htsjdk.variant.vcf.VCFFileReader
+import org.broadinstitute.yootilz.core.snag.Snag
 
 import scala.jdk.CollectionConverters._
 
 object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
 
-  def execute(command: TsvMatrixCommand): Result = {
+  override def execute(command: TsvMatrixCommand): Either[Snag, Result] = {
     import command._
     val vcfReader = new VCFFileReader(idsFile.path, false)
     val idList = vcfReader.iterator().asScala.map(_.getID).toSeq
@@ -20,7 +22,7 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
       matrix.put(row.string(idCol1), row.string(idCol2), row.string(valueCol))
     }
     matrix.writeTo(outFile)
-    Result(command, success = true)
+    Right(Result.Done)
   }
 
   class Matrix(ids: Seq[String], default: String, diagonal: String) {
@@ -49,7 +51,5 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
       elements.foreach(values => writer.addRow(TsvRow(values)))
     }
   }
-
-  case class Result(command: TsvMatrixCommand, success: Boolean) extends ChowserExecuter.Result[TsvMatrixCommand]
 
 }
