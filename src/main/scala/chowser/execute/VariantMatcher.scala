@@ -4,12 +4,13 @@ import better.files.File
 import chowser.genomics.VariantGroupId.VariantGroupIdTsvWriter
 import chowser.genomics.{Location, VariantGroupId}
 import chowser.util.IntersecterAndDiffer
+import chowser.util.io.{InputId, OutputId}
 
 case class VariantMatcher(idKey: String) {
 
-  def compare(file1: File, file2: File,
-              fileToIter1: File => Iterator[VariantGroupId], fileToIter2: File => Iterator[VariantGroupId],
-              inBothFileOpt: Option[File], inOneOnlyFileOpt: Option[File], inTwoOnlyFileOpt: Option[File]
+  def compare(file1: InputId, file2: InputId,
+              fileToIter1: InputId => Iterator[VariantGroupId], fileToIter2: InputId => Iterator[VariantGroupId],
+              inBothFileOpt: Option[OutputId], inOneOnlyFileOpt: Option[OutputId], inTwoOnlyFileOpt: Option[OutputId]
              ): Unit = {
     val iter1 = fileToIter1(file1)
     val iter2 = fileToIter2(file2)
@@ -30,7 +31,7 @@ case class VariantMatcher(idKey: String) {
   }
 
   object Sink {
-    def forFileOpt(fileOpt: Option[File]): Sink = {
+    def forFileOpt(fileOpt: Option[OutputId]): Sink = {
       fileOpt match {
         case Some(file) => FileSink(file)
         case None => NoOpSink
@@ -38,7 +39,7 @@ case class VariantMatcher(idKey: String) {
     }
   }
 
-  case class FileSink(file: File) extends Sink {
+  case class FileSink(file: OutputId) extends Sink {
     val delegate = new VariantGroupIdTsvWriter(idKey)(file)
 
     override def write(variantGroupId: VariantGroupId): Unit = delegate.add(variantGroupId)

@@ -11,7 +11,7 @@ object TsvSliceExecuter extends ChowserExecuter[TsvSliceCommand] {
   override def execute(command: TsvSliceCommand): Either[Snag, Result] = {
     import command.{colName, filter, inFile, outFile}
     val rowFilter = RowFilters.ForCol(colName, filter)
-    TsvUtils.filterRows(inFile.file, outFile.file, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
     Right(Result.Done)
   }
 }

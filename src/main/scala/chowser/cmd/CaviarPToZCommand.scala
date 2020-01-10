@@ -1,8 +1,9 @@
 package chowser.cmd
 
-import chowser.util.io.IoId
+import chowser.util.io.{InputId, OutputId}
 
-case class CaviarPToZCommand(inFile: IoId, outFile: IoId, idCol: String, pCol: String)
+case class CaviarPToZCommand(inFile: InputId, outFile: OutputId, idCol: String, pCol: String,
+                             keyFileOpt: Option[InputId])
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 
 }

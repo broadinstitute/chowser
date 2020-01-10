@@ -3,6 +3,7 @@ package chowser.genomics
 import better.files.File
 import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import chowser.util.NumberParser
+import chowser.util.io.{InputId, OutputId}
 import htsjdk.variant.variantcontext.VariantContext
 
 import scala.jdk.CollectionConverters._
@@ -59,7 +60,7 @@ object VariantId {
     }
   }
 
-  class VariantIdTsvReader(val idKey: String)(val file: File) extends Iterator[VariantId] {
+  class VariantIdTsvReader(val idKey: String)(val file: InputId) extends Iterator[VariantId] {
     val tsvReader: BasicTsvReader = BasicTsvReader.forSimpleHeaderLine(file)
 
     val delegate: Iterator[VariantId] =
@@ -74,7 +75,7 @@ object VariantId {
     override def next(): VariantId = delegate.next()
   }
 
-  class VariantIdTsvWriter(val idKey: String)(val file: File) {
+  class VariantIdTsvWriter(val idKey: String)(val file: OutputId) {
     val tsvWriter = new TsvWriter(file, TsvHeader.ofLine(idKey))
 
     def add(variantId: VariantId): Unit = {

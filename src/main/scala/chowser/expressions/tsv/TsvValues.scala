@@ -1,14 +1,11 @@
 package chowser.expressions.tsv
 
-import better.files.File
 import chowser.expressions.Expression.{CallExpression, FloatLiteral}
-import chowser.expressions.defs.SymbolTable
 import chowser.expressions.defs.predef.ChowserPredefDefs
-import chowser.expressions.predef.ChowserPredef
-import chowser.expressions.{ChowserRuntime, Expression, ObjectType, Type}
-import chowser.expressions.values.{BoolValue, ChowserObjectPool, LambdaValue, ObjectValue, Value}
-import chowser.tsv.FilteredTsvReader.RowDoubleFilter
+import chowser.expressions.values.{BoolValue, ChowserObjectPool, LambdaValue, ObjectValue}
+import chowser.expressions.{ChowserRuntime, Type}
 import chowser.tsv.{BasicTsvReader, TsvReader}
+import chowser.util.io.InputId
 
 object TsvValues {
 
@@ -29,7 +26,7 @@ object TsvValues {
   }
 
   object TsvReaderObject {
-    def create(file: File): TsvReaderObject = {
+    def create(file: InputId): TsvReaderObject = {
       val tsvReader = BasicTsvReader.forSimpleHeaderLine(file)
       ChowserObjectPool.createInstance(TsvReaderObject(_)(tsvReader))
     }

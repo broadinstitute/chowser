@@ -2,6 +2,7 @@ package chowser.tsv
 
 import better.files.File
 import chowser.tsv.BasicTsvReader.LineParser
+import chowser.util.io.InputId
 
 class BasicTsvReader(val lineIterator: Iterator[String], val parser: LineParser, val cols: Seq[String],
                      val header: TsvHeader)
@@ -57,7 +58,10 @@ object BasicTsvReader {
     val whitespace: LineParser = new LineParser(LineCleaner.trim, LineCleaner.trim, LineSplitter.byWhiteSpaceGroup)
   }
 
-  def forSimpleHeaderLine(file: File, parser: LineParser = LineParser.default): BasicTsvReader =
+  def forSimpleHeaderLine(inputId: InputId, parser: LineParser = LineParser.default): BasicTsvReader =
+    forSimpleHeaderLine(inputId.file.lineIterator, parser)
+
+  def forSimpleHeaderLine(file: File, parser: LineParser): BasicTsvReader =
     forSimpleHeaderLine(file.lineIterator, parser)
 
   def forSimpleHeaderLine(lineIterator: Iterator[String], parser: LineParser): BasicTsvReader = {

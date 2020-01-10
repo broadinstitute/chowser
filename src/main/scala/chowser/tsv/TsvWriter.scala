@@ -1,18 +1,18 @@
 package chowser.tsv
 
-import better.files.File
+import chowser.util.io.OutputId
 
-class TsvWriter(val file: File, header: TsvHeader) {
-  if (file.nonEmpty) {
-    file.clear()
+class TsvWriter(val file: OutputId, header: TsvHeader) {
+  if (file.file.nonEmpty) {
+    file.file.clear()
   }
   for (headerLine <- header.lines) {
-    file.appendLine(headerLine)
+    file.file.appendLine(headerLine)
   }
 
-  def addRow(row: TsvRow): Unit = file.appendLine(row.line)
+  def addRow(row: TsvRow): Unit = file.file.appendLine(row.line)
 }
 
 object TsvWriter {
-  def apply(file: File, header: TsvHeader): TsvWriter = new TsvWriter(file, header)
+  def apply(file: OutputId, header: TsvHeader): TsvWriter = new TsvWriter(file, header)
 }

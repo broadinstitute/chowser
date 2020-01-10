@@ -1,6 +1,6 @@
 package chowser.cmd
 
-import chowser.util.io.IoId
+import chowser.util.io.{InputId, OutputId}
 
 trait ChowserCommand {
 
@@ -9,11 +9,11 @@ trait ChowserCommand {
 object ChowserCommand {
 
   trait OneInFile {
-    def inFile: IoId
+    def inFile: InputId
   }
 
   trait OneOutFile {
-    def outFile: IoId
+    def outFile: OutputId
   }
 
 }

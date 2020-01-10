@@ -1,9 +1,10 @@
 package chowser.cmd
 
-import chowser.util.io.IoId
+import chowser.util.io.{InputId, OutputId}
 
-case class VariantsMatchTsvTsvCommand(tsv1: IoId, tsv2: IoId, idCol1: String, idCol2: String,
-                                      inBothOpt: Option[IoId], onlyInOneOpt: Option[IoId], onlyInTwoOpt: Option[IoId])
+case class VariantsMatchTsvTsvCommand(tsv1: InputId, tsv2: InputId, idCol1: String, idCol2: String,
+                                      inBothOpt: Option[OutputId], onlyInOneOpt: Option[OutputId],
+                                      onlyInTwoOpt: Option[OutputId], keyFileOpt: Option[InputId])
   extends ChowserCommand {
 
 }

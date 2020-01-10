@@ -11,7 +11,7 @@ object TsvRangeExecuter extends ChowserExecuter[TsvRangeCommand] {
   override def execute(command: TsvRangeCommand): Either[Snag, Result] = {
     import command.{inFile, outFile, colName, filter}
     val rowFilter = RowFilters.ForCol(colName, StringFilters.parsesAsDoubleAndFilter(filter))
-    TsvUtils.filterRows(inFile.file, outFile.file, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
     Right(Result.Done)
   }
 }

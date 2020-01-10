@@ -11,7 +11,7 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
 
   override def execute(command: VariantsCanonicalizeTsvCommand): Either[Snag, Result] = {
     import command._
-    val reader = BasicTsvReader.forSimpleHeaderLine(inFile.file)
+    val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
     if (outFile.file.nonEmpty) {
       outFile.file.clear()
     }

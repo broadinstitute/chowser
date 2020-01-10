@@ -10,7 +10,7 @@ object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
 
   override def execute(command: CaviarPToZCommand): Either[Snag, Result] = {
     import command.{idCol, inFile, outFile, pCol}
-    val reader = BasicTsvReader.forSimpleHeaderLine(inFile.file)
+    val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
     if (outFile.file.nonEmpty) {
       outFile.file.clear()
     }

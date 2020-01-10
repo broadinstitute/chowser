@@ -14,7 +14,7 @@ object VariantsForRegionExecuter extends ChowserExecuter[VariantsForRegionComman
       RowFilters.ForCol(chromColName, ChromosomeFilter(region.chromosome)) &&
         RowFilters.ForCol(posColName, StringFilters.parseAsUnsignedIntegerAndFilter(_ >= region.start)) &&
         RowFilters.ForCol(posColName, StringFilters.parseAsUnsignedIntegerAndFilter(_ < region.end))
-    TsvUtils.filterRows(inFile.file, outFile.file, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
     Right(Result.Done)
   }
 

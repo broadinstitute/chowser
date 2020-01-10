@@ -9,7 +9,7 @@ object TsvExtractUniqueExecuter extends ChowserExecuter[TsvExtractUniqueCommand]
 
   override def execute(command: TsvExtractUniqueCommand): Either[Snag, Result] = {
     import command.{colName, inFile, outFile}
-    TsvUtils.extractUniqueValues(inFile.file, outFile.file, BasicTsvReader.forSimpleHeaderLine(_), colName)
+    TsvUtils.extractUniqueValues(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), colName)
     Right(Result.Done)
   }
 

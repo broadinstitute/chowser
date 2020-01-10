@@ -9,7 +9,7 @@ object TsvSortIdsExecuter extends ChowserExecuter[TsvSortIdsCommand] {
 
   override def execute(command: TsvSortIdsCommand): Either[Snag, Result] = {
     import command.{colName, inFile, outFile}
-    TsvUtils.sortRowsByIds(inFile.file, outFile.file, BasicTsvReader.forSimpleHeaderLine(_), colName)
+    TsvUtils.sortRowsByIds(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), colName)
     Right(Result.Done)
   }
 }

@@ -4,28 +4,31 @@ import better.files.File
 import chowser.execute.ExecutionUtils
 import chowser.filter.Filter
 import chowser.genomics.VariantGroupId
+import chowser.util.io.{InputId, OutputId}
 
 import scala.collection.immutable.TreeSet
 
 object TsvUtils {
 
-  def filterRows(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, filter: Filter[TsvRow]): Unit = {
+  def filterRows(inFile: InputId, outFile: OutputId, readerGenerator: InputId => BasicTsvReader,
+                 filter: Filter[TsvRow]): Unit = {
     val reader = readerGenerator(inFile)
-    if (outFile.nonEmpty) {
-      outFile.clear()
+    if (outFile.file.nonEmpty) {
+      outFile.file.clear()
     }
-    reader.header.lines.foreach(outFile.appendLine(_))
-    reader.filter(filter).map(_.line).foreach(outFile.appendLine(_))
+    reader.header.lines.foreach(outFile.file.appendLine(_))
+    reader.filter(filter).map(_.line).foreach(outFile.file.appendLine(_))
   }
 
-  def sortRowsByCol(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
+  def sortRowsByCol(inFile: InputId, outFile: OutputId, readerGenerator: InputId => BasicTsvReader,
+                    colName: String): Unit = {
     val reader = readerGenerator(inFile)
     val colIndex = reader.cols.indexOf(colName)
     if (colIndex < 0) {
       throw new Exception(s"File $inFile does not have a column $colName.")
     }
-    if (outFile.nonEmpty) {
-      outFile.clear()
+    if (outFile.file.nonEmpty) {
+      outFile.file.clear()
     }
     val nHeaderLines = reader.header.lines.size
     val commandString =
@@ -35,13 +38,14 @@ object TsvUtils {
     ExecutionUtils.runBashScript(commandString)
   }
 
-  def sortRowsByIds(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
+  def sortRowsByIds(inFile: InputId, outFile: OutputId, readerGenerator: InputId => BasicTsvReader,
+                    colName: String): Unit = {
     val reader = readerGenerator(inFile)
     if (!reader.cols.contains(colName)) {
       throw new Exception(s"File $inFile does not have a column $colName.")
     }
-    if (outFile.nonEmpty) {
-      outFile.clear()
+    if (outFile.file.nonEmpty) {
+      outFile.file.clear()
     }
     val orderingByIds = new Ordering[TsvRow] {
       override def compare(row1: TsvRow, row2: TsvRow): Int = {
@@ -55,14 +59,15 @@ object TsvUtils {
     rowsSorted.foreach(writer.addRow)
   }
 
-  def extractUniqueValues(inFile: File, outFile: File, readerGenerator: File => BasicTsvReader, colName: String): Unit = {
+  def extractUniqueValues(inFile: InputId, outFile: OutputId, readerGenerator: InputId => BasicTsvReader,
+                          colName: String): Unit = {
     val reader = readerGenerator(inFile)
     val colIndex = reader.cols.indexOf(colName)
     if (colIndex < 0) {
       throw new Exception(s"File $inFile does not have a column $colName.")
     }
-    if (outFile.nonEmpty) {
-      outFile.clear()
+    if (outFile.file.nonEmpty) {
+      outFile.file.clear()
     }
     val nHeaderLines = reader.header.lines.size
     val commandString =
@@ -72,7 +77,7 @@ object TsvUtils {
 
   }
 
-  def loadVariantGroupIds(file: File, idCol: String): Set[VariantGroupId] = {
+  def loadVariantGroupIds(file: InputId, idCol: String): Set[VariantGroupId] = {
     val readerSelection = BasicTsvReader.forSimpleHeaderLine(file)
     val selectedIdStrings = readerSelection.flatMap(_.valueMap.get(idCol))
     selectedIdStrings.map(VariantGroupId.parse).collect {
