@@ -19,7 +19,7 @@ object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
       val pValueString = row.valueMap(pCol)
       val pValue = NumberParser.DoubleParser.parse(pValueString)
       val zScore = MathUtils.probit(pValue)
-     outFile.file.appendLine(id + "\t" + zScore)
+     outFile.appendLine(id + "\t" + zScore)
     }
     Right(Result.Done)
   }
