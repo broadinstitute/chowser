@@ -20,7 +20,7 @@ object VariantsSelectVcfExecuter extends ChowserExecuter[VariantsSelectVcfComman
         case Right(id) => selectedIds(id)
       }
     }
-    VcfUtils.transformVcf(dataFile.file, outFile.file)(_.filter(vcfRecordFilter))
+    VcfUtils.transformVcf(dataFile.fileDeprecated, outFile.fileDeprecated)(_.filter(vcfRecordFilter))
     Right(Result.Done)
   }
 }

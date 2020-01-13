@@ -1,15 +1,19 @@
 package chowser.util.io
 
-import java.io.PrintWriter
+import java.io.{InputStream, PrintWriter}
 
 import better.files.File
 
 trait IoId {
-  def file: File
+  @deprecated("Will be removed", "200113Tue")
+  def fileDeprecated: File
+  def asString: String
+  override def toString: String = asString
 }
 
 trait InputId extends IoId {
   def newLineIterator(resourceConfig: ResourceConfig): Iterator[String]
+  def newInputStream(resourceConfig: ResourceConfig): InputStream
 }
 
 object InputId {
@@ -27,15 +31,22 @@ object OutputId {
 
 trait FileIoId {
   def file: File
+  def fileDeprecated: File = file
 }
 
 case class FileInputId(file: File) extends InputId with FileIoId {
-  override def newLineIterator(resourceConfig: ResourceConfig): Iterator[String] = file.lineIterator
+  override def asString: String = file.toString()
+
+  override def newLineIterator(resourceConfig: ResourceConfig): Iterator[String] = fileDeprecated.lineIterator
+
+  override def newInputStream(resourceConfig: ResourceConfig): InputStream = file.inputStream.get
 }
 
 case class FileOutputId(file: File) extends OutputId with FileIoId {
-  override def appendLine(line: String): Unit = file.appendLine(line)
+  override def asString: String = file.toString()
 
-  override def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter = file.newPrintWriter()
+  override def appendLine(line: String): Unit = fileDeprecated.appendLine(line)
+
+  override def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter = fileDeprecated.newPrintWriter()
 }
 

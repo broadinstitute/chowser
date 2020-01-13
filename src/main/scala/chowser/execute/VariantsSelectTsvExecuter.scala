@@ -3,8 +3,7 @@ package chowser.execute
 import chowser.cmd.VariantsSelectTsvCommand
 import chowser.execute.ChowserExecuter.Result
 import chowser.genomics.VariantGroupId
-import chowser.tsv.{BasicTsvReader, TsvUtils}
-import chowser.tsv.TsvRow
+import chowser.tsv.{BasicTsvReader, TsvRow, TsvUtils, TsvWriter}
 import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsSelectTsvExecuter extends ChowserExecuter[VariantsSelectTsvCommand] {
@@ -19,11 +18,8 @@ object VariantsSelectTsvExecuter extends ChowserExecuter[VariantsSelectTsvComman
       }
     }
     val readerData = BasicTsvReader.forSimpleHeaderLine(dataFile)
-    if (outFile.file.nonEmpty) {
-      outFile.file.clear()
-    }
-    readerData.header.lines.foreach(outFile.file.appendLine(_))
-    readerData.filter(rowFilter).map(_.line).foreach(outFile.file.appendLine(_))
+    val writer = TsvWriter(outFile, readerData.header)
+    readerData.filter(rowFilter).foreach(writer.addRow)
     Right(Result.Done)
   }
 }

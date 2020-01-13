@@ -3,7 +3,7 @@ package chowser.execute
 import chowser.cmd.VariantsCanonicalizeTsvCommand
 import chowser.execute.ChowserExecuter.Result
 import chowser.genomics.{Chromosome, VariantGroupId}
-import chowser.tsv.{BasicTsvReader, TsvRow}
+import chowser.tsv.{BasicTsvReader, TsvRow, TsvWriter}
 import chowser.util.NumberParser
 import org.broadinstitute.yootilz.core.snag.Snag
 
@@ -12,12 +12,9 @@ object VariantsCanonicalizeTsvExecuter extends ChowserExecuter[VariantsCanonical
   override def execute(command: VariantsCanonicalizeTsvCommand): Either[Snag, Result] = {
     import command._
     val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
-    if (outFile.file.nonEmpty) {
-      outFile.file.clear()
-    }
-    reader.header.lines.foreach(outFile.file.appendLine(_))
+    val writer = TsvWriter(outFile, reader.header)
     reader.map(updateWithCanonicalId(idCol, chromosomeCol, positionCol, refCol, altCol, _ => ()))
-      .map(_.line).foreach(outFile.file.appendLine(_))
+      .foreach(writer.addRow)
     Right(Result.Done)
   }
 

@@ -26,8 +26,8 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
       regionsByChromosome += (chromosome -> regionsNew)
     }
     val chromosomes = regionsByChromosome.keys.toSeq.sorted
-    if(outFile.file.nonEmpty) {
-      outFile.file.clear()
+    if(outFile.fileDeprecated.nonEmpty) {
+      outFile.fileDeprecated.clear()
     }
     val writer = TsvWriter(outFile, TsvHeader.ofColNames(Seq(chromColName, startColName, endColName)))
     for(chromosome <- chromosomes) {

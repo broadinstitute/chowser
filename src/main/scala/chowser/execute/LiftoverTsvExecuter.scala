@@ -13,8 +13,8 @@ import org.broadinstitute.yootilz.core.snag.Snag
 object LiftoverTsvExecuter extends ChowserExecuter[LiftoverTsvCommand] {
 
   override def execute(command: LiftoverTsvCommand): Either[Snag, Result] = {
-    import command.{chainFile, inFile, outFile, idColOpt, chromPosColsOpt}
-    val liftOver = new LiftOver(chainFile.file.toJava)
+    import command.{chainFile, inFile, outFile, idColOpt, chromPosColsOpt, resourceConfig}
+    val liftOver = new LiftOver(chainFile.newInputStream(resourceConfig), chainFile.asString)
     val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
     val writer = TsvWriter(outFile, reader.header)
     val rowMapper: TsvRow => Iterator[TsvRow] = { row =>

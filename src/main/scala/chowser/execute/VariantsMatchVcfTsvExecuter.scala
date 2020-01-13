@@ -15,7 +15,7 @@ object VariantsMatchVcfTsvExecuter extends ChowserExecuter[VariantsMatchVcfTsvCo
   override def execute(command: VariantsMatchVcfTsvCommand): Either[Snag, Result] = {
     import command._
     val vcfToIter: InputId => Iterator[VariantGroupId] = { file =>
-      val reader = new VCFFileReader(file.file.path, false)
+      val reader = new VCFFileReader(file.fileDeprecated.path, false)
       reader.iterator().asScala.map(VariantGroupId.fromVariantContext).collect {
         case Right(variantGroupId) => variantGroupId
       }

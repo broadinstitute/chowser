@@ -59,7 +59,7 @@ object BasicTsvReader {
   }
 
   def forSimpleHeaderLine(inputId: InputId, parser: LineParser = LineParser.default): BasicTsvReader =
-    forSimpleHeaderLine(inputId.file.lineIterator, parser)
+    forSimpleHeaderLine(inputId.fileDeprecated.lineIterator, parser)
 
   def forSimpleHeaderLine(file: File, parser: LineParser): BasicTsvReader =
     forSimpleHeaderLine(file.lineIterator, parser)

@@ -11,8 +11,8 @@ object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
   override def execute(command: CaviarPToZCommand): Either[Snag, Result] = {
     import command.{idCol, inFile, outFile, pCol}
     val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
-    if (outFile.file.nonEmpty) {
-      outFile.file.clear()
+    if (outFile.fileDeprecated.nonEmpty) {
+      outFile.fileDeprecated.clear()
     }
     reader.foreach { row =>
       val id = row.valueMap(idCol)

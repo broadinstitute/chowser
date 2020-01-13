@@ -15,7 +15,7 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
 
   override def execute(command: TsvMatrixCommand): Either[Snag, Result] = {
     import command._
-    val vcfReader = new VCFFileReader(idsFile.file.path, false)
+    val vcfReader = new VCFFileReader(idsFile.fileDeprecated.path, false)
     val idList = vcfReader.iterator().asScala.map(_.getID).toSeq
     val matrix = new Matrix(idList, "0.0", "1.0")
     val valueReader = BasicTsvReader.forSimpleHeaderLine(valuesFile, LineParser.whitespace)
