@@ -10,8 +10,8 @@ import chowser.expressions.{ChowserRuntime, Context, Identifier}
 import chowser.interpreter.ChowserInterpreter
 import org.broadinstitute.yootilz.core.snag.Snag
 
-object ShellExecuter extends ChowserExecuter[ShellCommand.type] {
-  override def execute(command: ShellCommand.type): Either[Snag, Result] = execute()
+object ShellExecuter extends ChowserExecuter[ShellCommand] {
+  override def execute(command: ShellCommand): Either[Snag, Result] = execute()
 
   def execute(): Either[Snag, Result] = {
     println("Welcome to ChowserShell!")

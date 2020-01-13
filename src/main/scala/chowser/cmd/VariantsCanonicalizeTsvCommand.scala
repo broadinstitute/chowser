@@ -1,10 +1,10 @@
 package chowser.cmd
 
-import chowser.util.io.{InputId, OutputId}
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
 
-case class VariantsCanonicalizeTsvCommand(inFile: InputId, outFile: OutputId,
+case class VariantsCanonicalizeTsvCommand(resourceConfig: ResourceConfig, inFile: InputId, outFile: OutputId,
                                           idCol: String, chromosomeCol: String, positionCol: String, refCol: String,
-                                          altCol: String, keyFileOpt: Option[InputId])
+                                          altCol: String)
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 
 }

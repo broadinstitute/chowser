@@ -1,9 +1,9 @@
 package chowser.cmd
 
-import chowser.util.io.{InputId, OutputId}
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
 
-case class VariantsSelectVcfCommand(dataFile: InputId, selectionFile: InputId, outFile: OutputId,
-                                    idColSelection: String, keyFileOpt: Option[InputId])
+case class VariantsSelectVcfCommand(resourceConfig: ResourceConfig, dataFile: InputId, selectionFile: InputId,
+                                    outFile: OutputId, idColSelection: String)
   extends ChowserCommand with ChowserCommand.OneOutFile {
 
 }

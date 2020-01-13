@@ -1,8 +1,8 @@
 package chowser.cmd
 
-import chowser.util.io.{InputId, OutputId}
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
 
-case class TsvSortIdsCommand(inFile: InputId, outFile: OutputId, colName: String, keyFileOpt: Option[InputId])
+case class TsvSortIdsCommand(resourceConfig: ResourceConfig, inFile: InputId, outFile: OutputId, colName: String)
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 
 }

@@ -1,9 +1,9 @@
 package chowser.cmd
 
-import chowser.util.io.{InputId, OutputId}
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
 
 trait ChowserCommand {
-
+  def resourceConfig: ResourceConfig
 }
 
 object ChowserCommand {

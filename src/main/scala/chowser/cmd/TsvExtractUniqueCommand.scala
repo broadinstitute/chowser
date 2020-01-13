@@ -1,8 +1,9 @@
 package chowser.cmd
 
-import chowser.util.io.{InputId, OutputId}
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
 
-case class TsvExtractUniqueCommand(inFile: InputId, outFile: OutputId, colName: String, keyFileOpt: Option[InputId])
+case class TsvExtractUniqueCommand(resourceConfig: ResourceConfig,
+                                   inFile: InputId, outFile: OutputId, colName: String)
   extends ChowserCommand with ChowserCommand.OneInFile with ChowserCommand.OneOutFile {
 
 }
