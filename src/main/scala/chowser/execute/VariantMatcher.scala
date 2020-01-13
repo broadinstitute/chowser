@@ -1,22 +1,22 @@
 package chowser.execute
 
-import better.files.File
 import chowser.genomics.VariantGroupId.VariantGroupIdTsvWriter
 import chowser.genomics.{Location, VariantGroupId}
 import chowser.util.IntersecterAndDiffer
-import chowser.util.io.{InputId, OutputId}
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
 
 case class VariantMatcher(idKey: String) {
 
   def compare(file1: InputId, file2: InputId,
               fileToIter1: InputId => Iterator[VariantGroupId], fileToIter2: InputId => Iterator[VariantGroupId],
-              inBothFileOpt: Option[OutputId], inOneOnlyFileOpt: Option[OutputId], inTwoOnlyFileOpt: Option[OutputId]
+              inBothFileOpt: Option[OutputId], inOneOnlyFileOpt: Option[OutputId], inTwoOnlyFileOpt: Option[OutputId],
+              resourceConfig: ResourceConfig
              ): Unit = {
     val iter1 = fileToIter1(file1)
     val iter2 = fileToIter2(file2)
-    val inBothSink = Sink.forFileOpt(inBothFileOpt)
-    val inOneOnlySink = Sink.forFileOpt(inOneOnlyFileOpt)
-    val inTwoOnlySink = Sink.forFileOpt(inTwoOnlyFileOpt)
+    val inBothSink = Sink.forFileOpt(inBothFileOpt, resourceConfig)
+    val inOneOnlySink = Sink.forFileOpt(inOneOnlyFileOpt, resourceConfig)
+    val inTwoOnlySink = Sink.forFileOpt(inTwoOnlyFileOpt, resourceConfig)
     var buffer: VariantBuffer = VariantBuffer.apply(iter1, iter2, inBothSink, inOneOnlySink, inTwoOnlySink)
     while (!buffer.isTerminal) {
       buffer = buffer.next()
@@ -31,16 +31,16 @@ case class VariantMatcher(idKey: String) {
   }
 
   object Sink {
-    def forFileOpt(fileOpt: Option[OutputId]): Sink = {
+    def forFileOpt(fileOpt: Option[OutputId], resourceConfig: ResourceConfig): Sink = {
       fileOpt match {
-        case Some(file) => FileSink(file)
+        case Some(file) => FileSink(file, resourceConfig)
         case None => NoOpSink
       }
     }
   }
 
-  case class FileSink(file: OutputId) extends Sink {
-    val delegate = new VariantGroupIdTsvWriter(idKey)(file)
+  case class FileSink(file: OutputId, resourceConfig: ResourceConfig) extends Sink {
+    val delegate = new VariantGroupIdTsvWriter(idKey)(file, resourceConfig)
 
     override def write(variantGroupId: VariantGroupId): Unit = delegate.add(variantGroupId)
 
@@ -190,6 +190,7 @@ case class VariantMatcher(idKey: String) {
       write(variantAhead1)
       channels.iter1.foreach(write)
     }
+
     override def next(): VariantBufferAllDone = {
       flush1()
       new VariantBufferAllDone(channels)

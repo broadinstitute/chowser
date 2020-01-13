@@ -33,8 +33,8 @@ object ChowserPredefDefs {
   ))
 
   val functionTable: FunctionTable = DefTable(Set(
-    stringFunction1[TsvReaderObject](Identifier(None, "TsvReader"), ChowserObjectPool.tsvReader,
-      (fileString: String) => TsvReaderObject.create(FileInputId(File(fileString)))),
+//    stringFunction1[TsvReaderObject](Identifier(None, "TsvReader"), ChowserObjectPool.tsvReader,
+//      (fileString: String) => TsvReaderObject.create(FileInputId(File(fileString)))),
     tsvReaderFunction1[IntValue](Identifier(None, "countRecords"), IntType,
       (tsvReader: TsvReaderObject) => IntValue(tsvReader.countRecords)),
     tsvReaderColFilterFunction(Identifier(None, "filterFloatCol"),

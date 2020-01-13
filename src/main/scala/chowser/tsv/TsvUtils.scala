@@ -1,19 +1,18 @@
 package chowser.tsv
 
-import better.files.File
 import chowser.execute.ExecutionUtils
 import chowser.filter.Filter
 import chowser.genomics.VariantGroupId
-import chowser.util.io.{FileInputId, FileOutputId, InputId, OutputId}
+import chowser.util.io._
 
 import scala.collection.immutable.TreeSet
 
 object TsvUtils {
 
   def filterRows(inFile: InputId, outFile: OutputId, readerGenerator: InputId => BasicTsvReader,
-                 filter: Filter[TsvRow]): Unit = {
+                 resourceConfig: ResourceConfig, filter: Filter[TsvRow]): Unit = {
     val reader = readerGenerator(inFile)
-    val writer = TsvWriter(outFile, reader.header)
+    val writer = TsvWriter(outFile, reader.header, resourceConfig)
     reader.filter(filter).foreach(writer.addRow)
   }
 
@@ -41,7 +40,7 @@ object TsvUtils {
   }
 
   def sortRowsByIds(inFile: InputId, outFile: OutputId, readerGenerator: InputId => BasicTsvReader,
-                    colName: String): Unit = {
+                    colName: String, resourceConfig: ResourceConfig): Unit = {
     val reader = readerGenerator(inFile)
     if (!reader.cols.contains(colName)) {
       throw new Exception(s"File $inFile does not have a column $colName.")
@@ -54,7 +53,7 @@ object TsvUtils {
       }
     }
     val rowsSorted = TreeSet[TsvRow]()(orderingByIds) ++ reader
-    val writer = TsvWriter(outFile, reader.header)
+    val writer = TsvWriter(outFile, reader.header, resourceConfig)
     rowsSorted.foreach(writer.addRow)
   }
 
@@ -80,8 +79,8 @@ object TsvUtils {
     }
   }
 
-  def loadVariantGroupIds(file: InputId, idCol: String): Set[VariantGroupId] = {
-    val readerSelection = BasicTsvReader.forSimpleHeaderLine(file)
+  def loadVariantGroupIds(file: InputId, idCol: String, resourceConfig: ResourceConfig): Set[VariantGroupId] = {
+    val readerSelection = BasicTsvReader.forSimpleHeaderLine(file, resourceConfig)
     val selectedIdStrings = readerSelection.flatMap(_.valueMap.get(idCol))
     selectedIdStrings.map(VariantGroupId.parse).collect {
       case Right(id) => id

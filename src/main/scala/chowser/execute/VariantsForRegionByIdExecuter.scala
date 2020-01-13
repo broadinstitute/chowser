@@ -9,9 +9,10 @@ import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsForRegionByIdExecuter extends ChowserExecuter[VariantsForRegionByIdCommand] {
   override def execute(command: VariantsForRegionByIdCommand): Either[Snag, Result] = {
-    import command.{idColName, inFile, outFile, region}
+    import command.{idColName, inFile, outFile, region, resourceConfig}
     val rowFilter = RowFilters.ForCol(idColName, VariantInRegionFilter(region))
-    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_, resourceConfig), resourceConfig,
+      rowFilter)
     Right(Result.Done)
   }
 

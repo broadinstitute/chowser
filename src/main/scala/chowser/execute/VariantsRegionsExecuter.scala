@@ -12,10 +12,10 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
   val endColName = "end"
 
   override def execute(command: VariantsRegionsCommand): Either[Snag, Result] = {
-    import command.{inFile, outFile, chromColName, posColName, radius }
-    val rowIterator = BasicTsvReader.forSimpleHeaderLine(inFile)
+    import command.{inFile, outFile, chromColName, posColName, radius, resourceConfig}
+    val rowIterator = BasicTsvReader.forSimpleHeaderLine(inFile, resourceConfig)
     var regionsByChromosome: Map[String, CanonicalIntervals] = Map.empty
-    for(row <- rowIterator) {
+    for (row <- rowIterator) {
       val chromosome = row.string(chromColName)
       val regionsOld = regionsByChromosome.getOrElse(chromosome, CanonicalIntervals.empty)
       val position = row.unsignedInt(posColName)
@@ -26,13 +26,10 @@ object VariantsRegionsExecuter extends ChowserExecuter[VariantsRegionsCommand] {
       regionsByChromosome += (chromosome -> regionsNew)
     }
     val chromosomes = regionsByChromosome.keys.toSeq.sorted
-    if(outFile.fileDeprecated.nonEmpty) {
-      outFile.fileDeprecated.clear()
-    }
-    val writer = TsvWriter(outFile, TsvHeader.ofColNames(Seq(chromColName, startColName, endColName)))
-    for(chromosome <- chromosomes) {
+    val writer = TsvWriter(outFile, TsvHeader.ofColNames(Seq(chromColName, startColName, endColName)), resourceConfig)
+    for (chromosome <- chromosomes) {
       val regions = regionsByChromosome(chromosome)
-      for(region <- regions.intervals) {
+      for (region <- regions.intervals) {
         writer.addRow(
           TsvRow(chromColName -> chromosome, startColName -> region.start.toString, endColName -> region.end.toString)
         )

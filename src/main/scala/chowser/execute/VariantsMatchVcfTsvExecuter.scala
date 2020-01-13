@@ -1,6 +1,5 @@
 package chowser.execute
 
-import better.files.File
 import chowser.cmd.VariantsMatchVcfTsvCommand
 import chowser.execute.ChowserExecuter.Result
 import chowser.genomics.VariantGroupId
@@ -22,10 +21,10 @@ object VariantsMatchVcfTsvExecuter extends ChowserExecuter[VariantsMatchVcfTsvCo
         }
       }
       val tsvToIter: InputId => Iterator[VariantGroupId] = { file =>
-        new VariantGroupIdTsvReader(idCol)(file)
+        new VariantGroupIdTsvReader(idCol)(file, resourceConfig)
       }
       val comparer = VariantMatcher(idCol)
-      comparer.compare(vcf, tsv, vcfToIter, tsvToIter, inBothOpt, vcfOnlyOpt, tsvOnlyOpt)
+      comparer.compare(vcf, tsv, vcfToIter, tsvToIter, inBothOpt, vcfOnlyOpt, tsvOnlyOpt, resourceConfig)
       Right(Result.Done)
     } else {
       Left(Snag(s"For this feature, VCF file needs to be local file, but $vcf is not."))

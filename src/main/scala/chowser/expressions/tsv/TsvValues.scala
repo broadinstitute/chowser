@@ -5,7 +5,7 @@ import chowser.expressions.defs.predef.ChowserPredefDefs
 import chowser.expressions.values.{BoolValue, ChowserObjectPool, LambdaValue, ObjectValue}
 import chowser.expressions.{ChowserRuntime, Type}
 import chowser.tsv.{BasicTsvReader, TsvReader}
-import chowser.util.io.InputId
+import chowser.util.io.{InputId, ResourceConfig}
 
 object TsvValues {
 
@@ -26,8 +26,8 @@ object TsvValues {
   }
 
   object TsvReaderObject {
-    def create(file: InputId): TsvReaderObject = {
-      val tsvReader = BasicTsvReader.forSimpleHeaderLine(file)
+    def create(file: InputId, resourceConfig: ResourceConfig): TsvReaderObject = {
+      val tsvReader = BasicTsvReader.forSimpleHeaderLine(file, resourceConfig)
       ChowserObjectPool.createInstance(TsvReaderObject(_)(tsvReader))
     }
   }

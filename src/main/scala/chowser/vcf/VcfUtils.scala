@@ -1,14 +1,18 @@
 package chowser.vcf
 
-import better.files.File
+import chowser.execute.ChowserExecuter.Result
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
+import org.broadinstitute.yootilz.core.snag.Snag
 
 object VcfUtils {
-  def transformVcf(inFile: File, outFile: File)(transformer: Iterator[VcfRecord] => Iterator[VcfRecord]): Unit = {
-    VcfReader(inFile) match {
+  def transformVcf(inFile: InputId, outFile: OutputId, resourceConfig: ResourceConfig)(
+    transformer: Iterator[VcfRecord] => Iterator[VcfRecord]): Either[Snag, Result] = {
+    VcfReader(inFile, resourceConfig) match {
       case Right(reader) =>
-        val writer = VcfWriter(outFile, reader.header)
+        val writer = VcfWriter(outFile, reader.header, resourceConfig)
         transformer(reader.recordsIterator).foreach(writer.write)
-      case Left(message) => println(message)
+        Right(Result.Done)
+      case Left(snag) => Left(snag)
     }
   }
 

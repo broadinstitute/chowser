@@ -10,15 +10,15 @@ object VariantsSelectTsvExecuter extends ChowserExecuter[VariantsSelectTsvComman
 
   override def execute(command: VariantsSelectTsvCommand): Either[Snag, Result] = {
     import command._
-    val selectedIds = TsvUtils.loadVariantGroupIds(selectionFile, idColSelection)
+    val selectedIds = TsvUtils.loadVariantGroupIds(selectionFile, idColSelection, resourceConfig)
     val rowFilter: TsvRow => Boolean = { row =>
       row.valueMap.get(idColData).map(VariantGroupId.parse) match {
         case Some(Right(id)) => selectedIds(id)
         case _ => false
       }
     }
-    val readerData = BasicTsvReader.forSimpleHeaderLine(dataFile)
-    val writer = TsvWriter(outFile, readerData.header)
+    val readerData = BasicTsvReader.forSimpleHeaderLine(dataFile, resourceConfig)
+    val writer = TsvWriter(outFile, readerData.header, resourceConfig)
     readerData.filter(rowFilter).foreach(writer.addRow)
     Right(Result.Done)
   }

@@ -8,8 +8,8 @@ import org.broadinstitute.yootilz.core.snag.Snag
 object TsvSortExecuter extends ChowserExecuter[TsvSortCommand] {
 
   override def execute(command: TsvSortCommand): Either[Snag, Result] = {
-    import command.{colName, inFile, outFile}
-    TsvUtils.sortRowsByCol(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), colName)
+    import command.{colName, inFile, outFile, resourceConfig}
+    TsvUtils.sortRowsByCol(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_, resourceConfig), colName)
     Right(Result.Done)
   }
 }

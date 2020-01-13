@@ -11,13 +11,13 @@ object VariantsMatchTsvTsvExecuter extends ChowserExecuter[VariantsMatchTsvTsvCo
   override def execute(command: VariantsMatchTsvTsvCommand): Either[Snag, Result] = {
     import command._
     val tsvToIter1: InputId => Iterator[VariantGroupId] = { file =>
-      new VariantGroupIdTsvReader(idCol1)(file)
+      new VariantGroupIdTsvReader(idCol1)(file, resourceConfig)
     }
     val tsvToIter2: InputId => Iterator[VariantGroupId] = { file =>
-      new VariantGroupIdTsvReader(idCol2)(file)
+      new VariantGroupIdTsvReader(idCol2)(file, resourceConfig)
     }
     val comparer = VariantMatcher(idCol1)
-    comparer.compare(tsv1, tsv2, tsvToIter1, tsvToIter2, inBothOpt, onlyInOneOpt, onlyInTwoOpt)
+    comparer.compare(tsv1, tsv2, tsvToIter1, tsvToIter2, inBothOpt, onlyInOneOpt, onlyInTwoOpt, resourceConfig)
     Right(Result.Done)
   }
 }

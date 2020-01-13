@@ -4,7 +4,7 @@ import better.files.File
 import chowser.genomics.VariantId.coordinateDividerRegex
 import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import chowser.util.NumberParser
-import chowser.util.io.{InputId, OutputId}
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
 import htsjdk.variant.variantcontext.VariantContext
 
 import scala.jdk.CollectionConverters._
@@ -67,8 +67,9 @@ object VariantGroupId {
     }
   }
 
-  class VariantGroupIdTsvReader(val idKey: String)(val file: InputId) extends Iterator[VariantGroupId] {
-    val tsvReader: BasicTsvReader = BasicTsvReader.forSimpleHeaderLine(file)
+  class VariantGroupIdTsvReader(val idKey: String)(val file: InputId, resourceConfig: ResourceConfig)
+    extends Iterator[VariantGroupId] {
+    val tsvReader: BasicTsvReader = BasicTsvReader.forSimpleHeaderLine(file, resourceConfig)
 
     val delegate: Iterator[VariantGroupId] =
       tsvReader.map(_.valueMap).map(_.get(idKey)).collect {
@@ -82,8 +83,8 @@ object VariantGroupId {
     override def next(): VariantGroupId = delegate.next()
   }
 
-  class VariantGroupIdTsvWriter(val idKey: String)(val file: OutputId) {
-    val tsvWriter = new TsvWriter(file, TsvHeader.ofLine(idKey))
+  class VariantGroupIdTsvWriter(val idKey: String)(val file: OutputId, resourceConfig: ResourceConfig) {
+    val tsvWriter = new TsvWriter(file, TsvHeader.ofLine(idKey), resourceConfig)
 
     def add(variantGroupId: VariantGroupId): Unit = {
       tsvWriter.addRow(TsvRow(Seq(idKey), Map(idKey -> variantGroupId.toString)))

@@ -10,7 +10,7 @@ object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
 
   override def execute(command: CaviarPToZCommand): Either[Snag, Result] = {
     import command._
-    val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
+    val reader = BasicTsvReader.forSimpleHeaderLine(inFile, resourceConfig)
     val writer = outFile.newPrintWriter(resourceConfig)
     reader.foreach { row =>
       val id = row.valueMap(idCol)

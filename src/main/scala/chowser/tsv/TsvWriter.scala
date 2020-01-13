@@ -1,18 +1,19 @@
 package chowser.tsv
 
-import chowser.util.io.OutputId
+import java.io.PrintWriter
 
-class TsvWriter(val file: OutputId, header: TsvHeader) {
-  if (file.fileDeprecated.nonEmpty) {
-    file.fileDeprecated.clear()
-  }
+import chowser.util.io.{OutputId, ResourceConfig}
+
+class TsvWriter(file: OutputId, header: TsvHeader, resourceConfig: ResourceConfig) {
+  val writer: PrintWriter = file.newPrintWriter(resourceConfig)
   for (headerLine <- header.lines) {
-    file.fileDeprecated.appendLine(headerLine)
+    writer.println(headerLine)
   }
 
-  def addRow(row: TsvRow): Unit = file.fileDeprecated.appendLine(row.line)
+  def addRow(row: TsvRow): Unit = writer.println(row.line)
 }
 
 object TsvWriter {
-  def apply(file: OutputId, header: TsvHeader): TsvWriter = new TsvWriter(file, header)
+  def apply(file: OutputId, header: TsvHeader, resourceConfig: ResourceConfig): TsvWriter =
+    new TsvWriter(file, header, resourceConfig)
 }

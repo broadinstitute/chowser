@@ -9,12 +9,13 @@ import org.broadinstitute.yootilz.core.snag.Snag
 
 object VariantsForRegionExecuter extends ChowserExecuter[VariantsForRegionCommand] {
   override def execute(command: VariantsForRegionCommand): Either[Snag, Result] = {
-    import command.{inFile, outFile, chromColName, posColName, region}
+    import command.{inFile, outFile, chromColName, posColName, region, resourceConfig}
     val rowFilter =
       RowFilters.ForCol(chromColName, ChromosomeFilter(region.chromosome)) &&
         RowFilters.ForCol(posColName, StringFilters.parseAsUnsignedIntegerAndFilter(_ >= region.start)) &&
         RowFilters.ForCol(posColName, StringFilters.parseAsUnsignedIntegerAndFilter(_ < region.end))
-    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_), rowFilter)
+    TsvUtils.filterRows(inFile, outFile, BasicTsvReader.forSimpleHeaderLine(_, resourceConfig), resourceConfig,
+      rowFilter)
     Right(Result.Done)
   }
 
@@ -26,4 +27,5 @@ object VariantsForRegionExecuter extends ChowserExecuter[VariantsForRegionComman
       }
     }
   }
+
 }

@@ -1,18 +1,18 @@
 package chowser.vcf
 
-import better.files.File
+import java.io.PrintWriter
 
-class VcfWriter(val file: File, val header: VcfHeader) {
+import chowser.util.io.{OutputId, ResourceConfig}
 
-  if(file.nonEmpty) {
-    file.clear()
-  }
-  header.lines.foreach(file.appendLine)
+class VcfWriter(val writer: PrintWriter, val header: VcfHeader) {
 
-  def write(record: VcfRecord): Unit = file.appendLine(record.toLine)
+  header.lines.foreach(writer.println)
+
+  def write(record: VcfRecord): Unit = writer.println(record.toLine)
 
 }
 
 object VcfWriter {
-  def apply(file: File, header: VcfHeader): VcfWriter = new VcfWriter(file, header)
+  def apply(outputId: OutputId, header: VcfHeader, resourceConfig: ResourceConfig): VcfWriter =
+    new VcfWriter(outputId.newPrintWriter(resourceConfig), header)
 }

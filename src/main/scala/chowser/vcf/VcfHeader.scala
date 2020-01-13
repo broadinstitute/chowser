@@ -1,27 +1,29 @@
 package chowser.vcf
 
+import org.broadinstitute.yootilz.core.snag.Snag
+
 case class VcfHeader(lines: Seq[String]) {
 
 }
 
 object VcfHeader {
 
-  def fromLineIterator(lineIterator: Iterator[String]): Either[String, VcfHeader] = {
+  def fromLineIterator(lineIterator: Iterator[String]): Either[Snag, VcfHeader] = {
     var lines: Seq[String] = Seq.empty
-    if(lineIterator.hasNext) {
+    if (lineIterator.hasNext) {
       var line = lineIterator.next()
       lines :+= line
-      while(line.startsWith("##")) {
+      while (line.startsWith("##")) {
         line = lineIterator.next()
         lines :+= line
       }
-      if(line.startsWith("#")) {
+      if (line.startsWith("#")) {
         Right(VcfHeader(lines))
       } else {
-        Left("Malformed VCF: header line missing,")
+        Left(Snag("Malformed VCF: header line missing."))
       }
     } else {
-      Left("No lines to read.")
+      Left(Snag("No lines to read."))
     }
   }
 }

@@ -5,14 +5,14 @@ import java.io.{InputStream, PrintWriter}
 import better.files.File
 
 trait IoId {
-  @deprecated("Will be removed", "200113Tue")
-  def fileDeprecated: File
   def asString: String
+
   override def toString: String = asString
 }
 
 trait InputId extends IoId {
   def newLineIterator(resourceConfig: ResourceConfig): Iterator[String]
+
   def newInputStream(resourceConfig: ResourceConfig): InputStream
 }
 
@@ -22,7 +22,6 @@ object InputId {
 
 trait OutputId extends IoId {
   def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter
-  def appendLine(line: String): Unit
 }
 
 object OutputId {
@@ -31,6 +30,7 @@ object OutputId {
 
 trait FileIoId {
   def file: File
+
   def fileDeprecated: File = file
 }
 
@@ -44,8 +44,6 @@ case class FileInputId(file: File) extends InputId with FileIoId {
 
 case class FileOutputId(file: File) extends OutputId with FileIoId {
   override def asString: String = file.toString()
-
-  override def appendLine(line: String): Unit = fileDeprecated.appendLine(line)
 
   override def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter = fileDeprecated.newPrintWriter()
 }

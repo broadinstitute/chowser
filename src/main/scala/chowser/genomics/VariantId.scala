@@ -1,9 +1,8 @@
 package chowser.genomics
 
-import better.files.File
 import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
 import chowser.util.NumberParser
-import chowser.util.io.{InputId, OutputId}
+import chowser.util.io.{InputId, OutputId, ResourceConfig}
 import htsjdk.variant.variantcontext.VariantContext
 
 import scala.jdk.CollectionConverters._
@@ -20,8 +19,9 @@ object VariantId {
     VariantId(Location(chromosome, position), ref, alt)
 
   val emptySequenceString: String = "-"
+
   def adjustSequenceIfEmpty(sequence: String): String = {
-    if(sequence.isEmpty) emptySequenceString else sequence
+    if (sequence.isEmpty) emptySequenceString else sequence
   }
 
   def fromVariantContext(context: VariantContext): Seq[Either[String, VariantId]] = {
@@ -42,7 +42,7 @@ object VariantId {
 
   def parse(string: String): Either[String, VariantId] = {
     val parts = string.split(coordinateDividerRegex)
-    if(parts.size < 4 || parts.size > 5) {
+    if (parts.size < 4 || parts.size > 5) {
       Left(s"""Unrecognized format of variant id \"$string\"""")
     } else {
       Chromosome.parse(parts(0)) match {
@@ -60,8 +60,9 @@ object VariantId {
     }
   }
 
-  class VariantIdTsvReader(val idKey: String)(val file: InputId) extends Iterator[VariantId] {
-    val tsvReader: BasicTsvReader = BasicTsvReader.forSimpleHeaderLine(file)
+  class VariantIdTsvReader(val idKey: String)(val file: InputId, resourceConfig: ResourceConfig)
+    extends Iterator[VariantId] {
+    val tsvReader: BasicTsvReader = BasicTsvReader.forSimpleHeaderLine(file, resourceConfig)
 
     val delegate: Iterator[VariantId] =
       tsvReader.map(_.valueMap).map(_.get(idKey)).collect {
@@ -75,8 +76,8 @@ object VariantId {
     override def next(): VariantId = delegate.next()
   }
 
-  class VariantIdTsvWriter(val idKey: String)(val file: OutputId) {
-    val tsvWriter = new TsvWriter(file, TsvHeader.ofLine(idKey))
+  class VariantIdTsvWriter(val idKey: String)(val file: OutputId, resourceConfig: ResourceConfig) {
+    val tsvWriter = new TsvWriter(file, TsvHeader.ofLine(idKey), resourceConfig)
 
     def add(variantId: VariantId): Unit = {
       tsvWriter.addRow(TsvRow(Seq(idKey), Map(idKey -> variantId.toString)))
