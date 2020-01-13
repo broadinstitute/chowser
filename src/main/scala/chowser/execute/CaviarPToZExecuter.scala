@@ -9,17 +9,15 @@ import org.broadinstitute.yootilz.core.snag.Snag
 object CaviarPToZExecuter extends ChowserExecuter[CaviarPToZCommand] {
 
   override def execute(command: CaviarPToZCommand): Either[Snag, Result] = {
-    import command.{idCol, inFile, outFile, pCol}
+    import command._
     val reader = BasicTsvReader.forSimpleHeaderLine(inFile)
-    if (outFile.fileDeprecated.nonEmpty) {
-      outFile.fileDeprecated.clear()
-    }
+    val writer = outFile.newPrintWriter(resourceConfig)
     reader.foreach { row =>
       val id = row.valueMap(idCol)
       val pValueString = row.valueMap(pCol)
       val pValue = NumberParser.DoubleParser.parse(pValueString)
       val zScore = MathUtils.probit(pValue)
-     outFile.appendLine(id + "\t" + zScore)
+      writer.println(id + "\t" + zScore)
     }
     Right(Result.Done)
   }

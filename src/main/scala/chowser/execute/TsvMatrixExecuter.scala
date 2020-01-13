@@ -5,7 +5,7 @@ import chowser.cmd.TsvMatrixCommand
 import chowser.execute.ChowserExecuter.Result
 import chowser.tsv.BasicTsvReader.LineParser
 import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
-import chowser.util.io.OutputId
+import chowser.util.io.{FileInputId, OutputId}
 import htsjdk.variant.vcf.VCFFileReader
 import org.broadinstitute.yootilz.core.snag.Snag
 
@@ -15,15 +15,19 @@ object TsvMatrixExecuter extends ChowserExecuter[TsvMatrixCommand] {
 
   override def execute(command: TsvMatrixCommand): Either[Snag, Result] = {
     import command._
-    val vcfReader = new VCFFileReader(idsFile.fileDeprecated.path, false)
-    val idList = vcfReader.iterator().asScala.map(_.getID).toSeq
-    val matrix = new Matrix(idList, "0.0", "1.0")
-    val valueReader = BasicTsvReader.forSimpleHeaderLine(valuesFile, LineParser.whitespace)
-    valueReader.foreach { row =>
-      matrix.put(row.string(idCol1), row.string(idCol2), row.string(valueCol))
+    idsFile match {
+      case FileInputId(idsFileFile) =>
+        val vcfReader = new VCFFileReader(idsFileFile.path, false)
+        val idList = vcfReader.iterator().asScala.map(_.getID).toSeq
+        val matrix = new Matrix(idList, "0.0", "1.0")
+        val valueReader = BasicTsvReader.forSimpleHeaderLine(valuesFile, LineParser.whitespace)
+        valueReader.foreach { row =>
+          matrix.put(row.string(idCol1), row.string(idCol2), row.string(valueCol))
+        }
+        matrix.writeTo(outFile)
+        Right(Result.Done)
+      case _ => Left(Snag(s"This feature needs a local ids file, but $idsFile is not."))
     }
-    matrix.writeTo(outFile)
-    Right(Result.Done)
   }
 
   class Matrix(ids: Seq[String], default: String, diagonal: String) {
