@@ -2,7 +2,7 @@ import sbt.project
 
 val chowserV = "1.7.5"
 val scalaV = "2.13.1"
-val yootilzV = "0.0.3"
+val yootilzV = "0.1.0"
 val scalaTestV = "3.1.0"
 val betterFilesV = "3.8.0"
 val scallopV = "3.3.2"

@@ -29,6 +29,8 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
   trait KeyFile {
     _: ScallopConf =>
     val keyFile = opt[InputId]("key-file", required = false, descr = "Key file for authentication.")
+    val gcpProject = opt[String]("gcp-project", required = false, descr = "Google Cloud project.")
+    def getResourceConfig: ResourceConfig = ResourceConfig(keyFile.toOption, gcpProject.toOption)
   }
 
   val tsv = new Subcommand("tsv") {
@@ -197,8 +199,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
           case (None, Some(lowerLimit)) => lowerLimit
           case (None, None) => DoubleFilters.all
         }
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(TsvRangeCommand(resourceConfig, inFile, outFile, colName, numberFilter))
       case List(this.tsv, this.tsv.slice) =>
         val subcommand = tsv.slice
@@ -206,32 +207,28 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out()
         val colName = subcommand.col()
         val value = subcommand.value()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(TsvSliceCommand(resourceConfig, inFile, outFile, colName, Filter.Equal(value)))
       case List(this.tsv, this.tsv.sort) =>
         val subcommand = tsv.sort
         val inFile = subcommand.in()
         val outFile = subcommand.out()
         val colName = subcommand.col()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(TsvSortCommand(resourceConfig, inFile, outFile, colName))
       case List(this.tsv, this.tsv.sortIds) =>
         val subcommand = tsv.sortIds
         val inFile = subcommand.in()
         val outFile = subcommand.out()
         val colName = subcommand.col()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(TsvSortIdsCommand(resourceConfig, inFile, outFile, colName))
       case List(this.tsv, this.tsv.extractUnique) =>
         val subcommand = tsv.extractUnique
         val inFile = subcommand.in()
         val outFile = subcommand.out()
-        val keyFileOpt = subcommand.keyFile.toOption
         val colName = subcommand.col()
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(TsvExtractUniqueCommand(resourceConfig, inFile, outFile, colName))
       case List(this.variants, this.variants.regions) =>
         val subcommand = variants.regions
@@ -240,8 +237,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val chromColName = subcommand.chromCol()
         val posColName = subcommand.posCol()
         val radius = subcommand.radius()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(VariantsRegionsCommand(resourceConfig, inFile, outFile, chromColName, posColName, radius))
       case List(this.variants, this.variants.forRegion) =>
         val subcommand = variants.forRegion
@@ -252,8 +248,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val chromosomeEither = Chromosome.parse(subcommand.chrom())
         val start = subcommand.start()
         val end = subcommand.end()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         chromosomeEither match {
           case Left(message) => Left("Couldn't parse chromosome:" + message)
           case Right(chromosome) =>
@@ -271,8 +266,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val chromosomeEither = Chromosome.parse(subcommand.chrom())
         val start = subcommand.start()
         val end = subcommand.end()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         chromosomeEither match {
           case Left(message) => Left("Couldn't parse chromosome:" + message)
           case Right(chromosome) =>
@@ -282,8 +276,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val subcommand = variants.canonicalizeVcf
         val inFile = subcommand.in()
         val outFile = subcommand.out()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(VariantsCanonicalizeVcfCommand(resourceConfig, inFile, outFile))
       case List(this.variants, this.variants.canonicalizeTsv) =>
         val subcommand = variants.canonicalizeTsv
@@ -294,8 +287,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val posCol = subcommand.posCol()
         val refCol = subcommand.refCol()
         val altCol = subcommand.altCol()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(VariantsCanonicalizeTsvCommand(resourceConfig, inFile, outFile, idCol, chromCol, posCol, refCol, altCol))
       case List(this.variants, this.variants.matchVcfTsv) =>
         val subcommand = variants.matchVcfTsv
@@ -305,8 +297,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val inBothOpt = subcommand.inBoth.toOption
         val vcfOnly = subcommand.vcfOnly.toOption
         val tsvOnly = subcommand.tsvOnly.toOption
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(
           VariantsMatchVcfTsvCommand(resourceConfig, vcfFile, tsvFile, idColName, inBothOpt, vcfOnly, tsvOnly)
         )
@@ -319,8 +310,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val inBothOpt = subcommand.inBoth.toOption
         val inOneOnly = subcommand.inOneOnly.toOption
         val inTwoOnly = subcommand.inTwoOnly.toOption
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(
           VariantsMatchTsvTsvCommand(resourceConfig, vcfFile, tsvFile, idCol1, idCol2, inBothOpt, inOneOnly, inTwoOnly)
         )
@@ -331,8 +321,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out()
         val idColData = subcommand.idColData()
         val idColSelection = subcommand.idColSelection()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(VariantsSelectTsvCommand(resourceConfig, dataFile, selectionFile, outFile, idColData, idColSelection))
       case List(this.variants, this.variants.selectVcf) =>
         val subcommand = variants.selectVcf
@@ -340,8 +329,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val selectionFile = subcommand.selection()
         val outFile = subcommand.out()
         val idColSelection = subcommand.idColSelection()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(VariantsSelectVcfCommand(resourceConfig, dataFile, selectionFile, outFile, idColSelection))
       case List(this.caviar, this.caviar.matrix) =>
         val subcommand = caviar.matrix
@@ -351,8 +339,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val idCol1 = subcommand.idCol1()
         val idCol2 = subcommand.idCol2()
         val valueCol = subcommand.valueCol()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(TsvMatrixCommand(resourceConfig, valuesFile, idsFile, outFile, idCol1, idCol2, valueCol))
       case List(this.caviar, this.caviar.pToZ) =>
         val subcommand = caviar.pToZ
@@ -360,8 +347,7 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val outFile = subcommand.out()
         val idCol = subcommand.idCol()
         val pCol = subcommand.pCol()
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(CaviarPToZCommand(resourceConfig, inFile, outFile, idCol, pCol))
       case List(this.liftover, this.liftover.tsv) =>
         val subcommand = liftover.tsv
@@ -372,13 +358,11 @@ class ChowserConf(args: Array[String]) extends ScallopConf(args) {
         val chromColOpt = subcommand.chromCol.toOption
         val posColOpt = subcommand.posCol.toOption
         val chromPosColsOpt = for(chromCol <- chromColOpt; posCol <- posColOpt) yield ChromPosCols(chromCol, posCol)
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(LiftoverTsvCommand(resourceConfig, inFile, chainFile, outFile, idColOpt, chromPosColsOpt))
       case List(this.shell) =>
         val subcommand = shell
-        val keyFileOpt = subcommand.keyFile.toOption
-        val resourceConfig = ResourceConfig.forKeyFileOpt(keyFileOpt)
+        val resourceConfig = subcommand.getResourceConfig
         Right(ShellCommand(resourceConfig))
       case _ => Left("Invalid combination of commands.")
     }
