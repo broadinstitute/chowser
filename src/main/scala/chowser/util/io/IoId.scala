@@ -5,12 +5,14 @@ import java.nio.channels.Channels
 import java.nio.charset.StandardCharsets
 
 import better.files.File
-import com.google.cloud.storage.BlobId
+import com.google.auth.oauth2.{GoogleCredentials, ServiceAccountCredentials}
+import com.google.cloud.storage.{BlobId, BlobInfo}
 import com.google.cloud.{ReadChannel, WriteChannel}
 import org.broadinstitute.yootilz.gcp.auth.OAuthUtils
 import org.broadinstitute.yootilz.gcp.storage.GoogleStorageUtils
 
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 trait IoId {
   def asString: String
@@ -49,15 +51,15 @@ trait FileIoId {
 case class FileInputId(file: File) extends InputId with FileIoId {
   override def asString: String = file.toString()
 
-  override def newLineIterator(resourceConfig: ResourceConfig): Iterator[String] = fileDeprecated.lineIterator
+  override def newLineIterator(resourceConfig: ResourceConfig): Iterator[String] = file.lineIterator
 
-  override def newInputStream(resourceConfig: ResourceConfig): InputStream = file.inputStream.get
+  override def newInputStream(resourceConfig: ResourceConfig): InputStream = file.newInputStream
 }
 
 case class FileOutputId(file: File) extends OutputId with FileIoId {
   override def asString: String = file.toString()
 
-  override def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter = fileDeprecated.newPrintWriter()
+  override def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter = file.newPrintWriter()
 }
 
 trait GcpBlobId extends IoId {
@@ -67,8 +69,11 @@ trait GcpBlobId extends IoId {
 
   protected def storageUtils(resourceConfig: ResourceConfig): GoogleStorageUtils = {
     val keyFileInputStreamOpt = resourceConfig.keyFileOpt.map(_.newInputStream(ResourceConfig.empty))
-    val credentials = OAuthUtils.getCredentials(keyFileInputStreamOpt)
-    GoogleStorageUtils(credentials, resourceConfig.gcpProjectOpt)
+    val creds = keyFileInputStreamOpt.flatMap { serviceAccountIn =>
+      Try(ServiceAccountCredentials.fromStream(serviceAccountIn)).toOption
+    }.getOrElse(GoogleCredentials.getApplicationDefault).createScoped()
+//    val credentials = OAuthUtils.getCredentials(keyFileInputStreamOpt)
+    GoogleStorageUtils(creds, resourceConfig.gcpProjectOpt)
   }
 }
 
@@ -77,7 +82,7 @@ object GcpBlobId {
     if(string.startsWith("gs://")) {
       val stringMinusPrefix = string.substring(5)
       val slashPos = stringMinusPrefix.indexOf('/')
-      if(slashPos > 0 && slashPos < stringMinusPrefix.size - 1) {
+      if(slashPos > 0 && slashPos < stringMinusPrefix.length - 1) {
         val bucketName = stringMinusPrefix.substring(0, slashPos)
         val objectName = stringMinusPrefix.substring(slashPos + 1)
         Some(BlobId.of(bucketName, objectName))
@@ -104,7 +109,9 @@ case class GcpBlobInputId(blobId: BlobId) extends GcpBlobId with InputId {
 }
 
 case class GcpBlobOutputId(blobId: BlobId) extends GcpBlobId with OutputId {
-  private def writeChannel(resourceConfig: ResourceConfig): WriteChannel = storageUtils(resourceConfig).writer(blobId)
+  private def writeChannel(resourceConfig: ResourceConfig): WriteChannel = {
+    storageUtils(resourceConfig).writerToNewBlob(blobId)
+  }
 
   override def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter = {
     new PrintWriter(Channels.newWriter(writeChannel(resourceConfig), StandardCharsets.UTF_8))

@@ -14,6 +14,7 @@ object TsvUtils {
     val reader = readerGenerator(inFile)
     val writer = TsvWriter(outFile, reader.header, resourceConfig)
     reader.filter(filter).foreach(writer.addRow)
+    writer.writer.close()
   }
 
   def sortRowsByCol(inFile: InputId, outFile: OutputId, readerGenerator: InputId => BasicTsvReader,
