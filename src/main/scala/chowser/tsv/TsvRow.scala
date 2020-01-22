@@ -24,7 +24,7 @@ object TsvRow {
   }
 
   def apply(values: Seq[String]): TsvRow = {
-    val cols = (1 until values.size).map(_.toString)
+    val cols = (1 to values.size).map(_.toString)
     val valueMap = cols.zip(values).toMap
     TsvRow(cols, valueMap)
   }

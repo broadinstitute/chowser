@@ -66,4 +66,11 @@ object BasicTsvReader {
     BasicTsvReader(lineIterator, parser, cols, TsvHeader.ofLine(headerLine))
   }
 
+  def forNoHeader(file: File, cols: Seq[String], parser: LineParser): BasicTsvReader =
+    forNoHeader(file.lineIterator, cols, parser)
+
+  def forNoHeader(lineIterator: Iterator[String], cols: Seq[String], parser: LineParser): BasicTsvReader = {
+    BasicTsvReader(lineIterator, parser, cols, TsvHeader.empty)
+  }
+
 }
