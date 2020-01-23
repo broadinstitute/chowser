@@ -2,6 +2,13 @@ package chowser.util
 
 object IntersecterAndDiffer {
 
+  def intersectAndDiffer[V](set1: Set[V], set2: Set[V]): IntersectionAndDiffs[V] = {
+    val intersection = set1.intersect(set2)
+    val diff1 = set1 -- set2
+    val diff2 = set2 -- set1
+    IntersectionAndDiffs[V](intersection, diff1, diff2)
+  }
+
   def intersectAndDiffByKey[K, V](set1: Set[V], set2: Set[V], toKey: V => K): IntersectionAndDiffs[V] = {
     def toMap(set: Set[V]): Map[K, V] = set.map(value => (toKey(value), value)).toMap
     val map1 =toMap(set1)
