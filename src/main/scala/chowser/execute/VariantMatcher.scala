@@ -217,9 +217,7 @@ case class VariantMatcher(idKey: String) {
     override def isTerminal: Boolean = false
 
     def flush(): VariantBufferFlushed = {
-      val intersectionAndDiffs =
-        IntersecterAndDiffer.intersectAndDiffByKey(variantsHere1, variantsHere2,
-          (id: VariantGroupId) => id.alleles.toSet)
+      val intersectionAndDiffs = IntersecterAndDiffer.intersectAndDiffer(variantsHere1, variantsHere2)
       channels.inBothSink.writeAll(intersectionAndDiffs.intersection)
       channels.inOneOnlySink.writeAll(intersectionAndDiffs.diff1)
       channels.inTwoOnlySink.writeAll(intersectionAndDiffs.diff2)
