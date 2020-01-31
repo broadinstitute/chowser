@@ -3,12 +3,13 @@ package chowser.util.io
 import java.io.{BufferedReader, InputStream, PrintWriter}
 import java.nio.channels.Channels
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 
 import better.files.File
+import chowser.util.io.Disposable.Disposer
 import com.google.auth.oauth2.{GoogleCredentials, ServiceAccountCredentials}
-import com.google.cloud.storage.{BlobId, BlobInfo}
+import com.google.cloud.storage.BlobId
 import com.google.cloud.{ReadChannel, WriteChannel}
-import org.broadinstitute.yootilz.gcp.auth.OAuthUtils
 import org.broadinstitute.yootilz.gcp.storage.GoogleStorageUtils
 
 import scala.jdk.CollectionConverters._
@@ -23,7 +24,11 @@ trait IoId {
 trait InputId extends IoId {
   def newLineIterator(resourceConfig: ResourceConfig): Iterator[String]
 
+  def newLineIteratorDisposable(resourceConfig: ResourceConfig): Disposable[Iterator[String]]
+
   def newInputStream(resourceConfig: ResourceConfig): InputStream
+
+  def newInputStreamDisposable(resourceConfig: ResourceConfig): Disposable[InputStream]
 }
 
 object InputId {
@@ -53,7 +58,20 @@ case class FileInputId(file: File) extends InputId with FileIoId {
 
   override def newLineIterator(resourceConfig: ResourceConfig): Iterator[String] = file.lineIterator
 
+  override def newLineIteratorDisposable(resourceConfig: ResourceConfig): Disposable[Iterator[String]] = {
+    val reader = Files.newBufferedReader(file.path, StandardCharsets.UTF_8)
+    val iterator = reader.lines().iterator().asScala
+    val disposer = Disposer.ForCloseable(reader)
+    Disposable(iterator)(disposer)
+  }
+
   override def newInputStream(resourceConfig: ResourceConfig): InputStream = file.newInputStream
+
+  override def newInputStreamDisposable(resourceConfig: ResourceConfig): Disposable[InputStream] = {
+    val inputStream = file.newInputStream
+    val disposer = Disposer.ForCloseable(inputStream)
+    Disposable(inputStream)(disposer)
+  }
 }
 
 case class FileOutputId(file: File) extends OutputId with FileIoId {
@@ -103,8 +121,21 @@ case class GcpBlobInputId(blobId: BlobId) extends GcpBlobId with InputId {
     reader.lines().iterator().asScala
   }
 
+  override def newLineIteratorDisposable(resourceConfig: ResourceConfig): Disposable[Iterator[String]] = {
+    val reader = new BufferedReader(Channels.newReader(readChannel(resourceConfig), StandardCharsets.UTF_8))
+    val iterator = reader.lines().iterator().asScala
+    val disposer = Disposer.ForCloseable(reader)
+    Disposable(iterator)(disposer)
+  }
+
   override def newInputStream(resourceConfig: ResourceConfig): InputStream = {
     Channels.newInputStream(readChannel(resourceConfig))
+  }
+
+  override def newInputStreamDisposable(resourceConfig: ResourceConfig): Disposable[InputStream] = {
+    val inputStream = Channels.newInputStream(readChannel(resourceConfig))
+    val disposer = Disposer.ForCloseable(inputStream)
+    Disposable(inputStream)(disposer)
   }
 }
 
