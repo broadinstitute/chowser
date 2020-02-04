@@ -2,18 +2,22 @@ package chowser.execute
 
 import better.files.File
 import chowser.cmd.VariantsRegionsCommand
+import chowser.tsv.BasicTsvReader.LineParser
 import chowser.tsv.{BasicTsvReader, TsvHeader, TsvRow, TsvWriter}
-import org.scalatest.FunSuite
+import chowser.util.io.{FileInputId, FileOutputId, ResourceConfig}
+import org.scalatest.funsuite.AnyFunSuite
 
-class VariantsRegionsExecuterTest extends FunSuite {
+class VariantsRegionsExecuterTest extends AnyFunSuite {
 
   private val chromColName = "chrom"
   private val posColName = "pos"
   private val radius = 1000
 
+  private val resourceConfig = ResourceConfig.empty
+
 
   private def prepareInFile(file: File): Unit = {
-    val writer = TsvWriter(file, TsvHeader.ofColNames(Seq(chromColName, posColName)))
+    val writer = TsvWriter(FileOutputId(file), TsvHeader.ofColNames(Seq(chromColName, posColName)), resourceConfig)
     def addRow(chrom: String, pos: String): Unit = writer.addRow(TsvRow(chromColName -> chrom, posColName -> pos))
     addRow("1", "104200")
     addRow("1", "103500")
@@ -46,10 +50,11 @@ class VariantsRegionsExecuterTest extends FunSuite {
     val inFile = rootDir / "inFile"
     val outFile = rootDir / "outFile"
     prepareInFile(inFile)
-    val command = VariantsRegionsCommand(inFile, outFile, chromColName, posColName, radius)
+    val command = VariantsRegionsCommand(resourceConfig, FileInputId(inFile), FileOutputId(outFile), chromColName,
+      posColName, radius)
     val result = VariantsRegionsExecuter.execute(command)
-    assert(result.success)
-    val reReader = BasicTsvReader.forSimpleHeaderLine(outFile)
+    assert(result.isRight)
+    val reReader = BasicTsvReader.forSimpleHeaderLine(FileInputId(outFile), ResourceConfig.empty, LineParser.default)
     val rows = reReader.toSeq
     val chromosomes = rows.map(row => row.valueMap(chromColName))
     assert(chromosomes == Seq("1", "1", "3", "X"))

@@ -39,6 +39,8 @@ object InputId {
 
 trait OutputId extends IoId {
   def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter
+
+  def newPrintWriterDisposable(resourceConfig: ResourceConfig): Disposable[PrintWriter]
 }
 
 object OutputId {
@@ -49,8 +51,6 @@ object OutputId {
 
 trait FileIoId {
   def file: File
-
-  def fileDeprecated: File = file
 }
 
 case class FileInputId(file: File) extends InputId with FileIoId {
@@ -78,6 +78,12 @@ case class FileOutputId(file: File) extends OutputId with FileIoId {
   override def asString: String = file.toString()
 
   override def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter = file.newPrintWriter()
+
+  override def newPrintWriterDisposable(resourceConfig: ResourceConfig): Disposable[PrintWriter] = {
+    val printWriter = file.newPrintWriter()
+    val disposer = Disposer.ForCloseable(printWriter)
+    Disposable(printWriter)(disposer)
+  }
 }
 
 trait GcpBlobId extends IoId {
@@ -90,17 +96,17 @@ trait GcpBlobId extends IoId {
     val creds = keyFileInputStreamOpt.flatMap { serviceAccountIn =>
       Try(ServiceAccountCredentials.fromStream(serviceAccountIn)).toOption
     }.getOrElse(GoogleCredentials.getApplicationDefault).createScoped()
-//    val credentials = OAuthUtils.getCredentials(keyFileInputStreamOpt)
+    //    val credentials = OAuthUtils.getCredentials(keyFileInputStreamOpt)
     GoogleStorageUtils(creds, resourceConfig.gcpProjectOpt)
   }
 }
 
 object GcpBlobId {
   def parseBlobId(string: String): Option[BlobId] = {
-    if(string.startsWith("gs://")) {
+    if (string.startsWith("gs://")) {
       val stringMinusPrefix = string.substring(5)
       val slashPos = stringMinusPrefix.indexOf('/')
-      if(slashPos > 0 && slashPos < stringMinusPrefix.length - 1) {
+      if (slashPos > 0 && slashPos < stringMinusPrefix.length - 1) {
         val bucketName = stringMinusPrefix.substring(0, slashPos)
         val objectName = stringMinusPrefix.substring(slashPos + 1)
         Some(BlobId.of(bucketName, objectName))
@@ -146,6 +152,12 @@ case class GcpBlobOutputId(blobId: BlobId) extends GcpBlobId with OutputId {
 
   override def newPrintWriter(resourceConfig: ResourceConfig): PrintWriter = {
     new PrintWriter(Channels.newWriter(writeChannel(resourceConfig), StandardCharsets.UTF_8))
+  }
+
+  override def newPrintWriterDisposable(resourceConfig: ResourceConfig): Disposable[PrintWriter] = {
+    val printWriter = new PrintWriter(Channels.newWriter(writeChannel(resourceConfig), StandardCharsets.UTF_8))
+    val disposer = Disposer.ForCloseable(printWriter)
+    Disposable(printWriter)(disposer)
   }
 }
 

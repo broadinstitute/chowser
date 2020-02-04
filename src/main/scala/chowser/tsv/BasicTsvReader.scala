@@ -62,9 +62,6 @@ object BasicTsvReader {
                           parser: LineParser = LineParser.default): BasicTsvReader =
     forSimpleHeaderLine(inputId.newLineIterator(resourceConfig), parser)
 
-  def forSimpleHeaderLine(file: File, parser: LineParser): BasicTsvReader =
-    forSimpleHeaderLine(file.lineIterator, parser)
-
   def forSimpleHeaderLine(lineIterator: Iterator[String], parser: LineParser): BasicTsvReader = {
     val headerLine = lineIterator.next()
     val cols = parser.parseHeaderLine(headerLine)
